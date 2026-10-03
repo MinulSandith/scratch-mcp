@@ -88,7 +88,21 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Scratch 3 MCP server (stdio)")
     parser.add_argument("--root", default=os.environ.get(ENV_ROOT, DEFAULT_ROOT),
                         help=f"Folder with your .sb3 files (default: ${ENV_ROOT} or {DEFAULT_ROOT})")
+    parser.add_argument("--setup-runtime", action="store_true",
+                        help="Install the Scratch engine (npm) and exit - used by cloud/CI setup scripts")
+    parser.add_argument("--check", action="store_true", help="Print what is installed (runtime, browser, ffmpeg) as JSON and exit")
     args = parser.parse_args(argv)
+    if args.setup_runtime or args.check:
+        import asyncio
+        import json
+
+        from .runtime.manager import RuntimeManager
+
+        rm = RuntimeManager(Ctx(args.root))
+        if args.setup_runtime:
+            asyncio.run(rm.setup())
+        print(json.dumps(rm.status(), indent=1))
+        return
     logging.basicConfig(level=logging.INFO, stream=sys.stderr, format="%(name)s: %(message)s")  # stdout is the MCP channel
     server = build_server(args.root)
     log.info("Serving Scratch projects from %s", Workspace(args.root).root)

@@ -93,6 +93,25 @@ Quit Claude Desktop completely and reopen it. First message to try:
 Logs: macOS `~/Library/Logs/Claude/mcp-server-scratch.log`, Windows `%APPDATA%\Claude\logs\mcp-server-scratch.log`.
 Sanity check from a terminal: `.venv/bin/scratch-mcp --root ~/ScratchProjects` prints `Serving Scratch projects from ...`.
 
+## Using it in Claude Code on the web (cloud sessions) or Claude Code locally
+
+The repository ships a project-level MCP config (`.mcp.json`) and a start-up hook (`.claude/settings.json` +
+`.claude/hooks/session-start.sh`), so a cloud session can use the tools with no manual setup:
+
+1. Open this repository (this branch) in Claude Code on the web. When the session starts, the hook (cloud sessions only)
+   installs the package, finds or installs Chromium, and downloads the Scratch engine once.
+2. Approve the project's `scratch` MCP server when Claude Code asks.
+3. Ask for what you want. Projects, exports and recordings are written to **`scratch-projects/`** inside the repo.
+4. **Commit and push `scratch-projects/` before the session ends** - the cloud container is deleted afterwards
+   (`scratch-projects/backups/` is git-ignored). Screenshots and previews come back to Claude as images; recorded videos and
+   `.sb3` files are in `scratch-projects/exports/`.
+
+Locally in a terminal: `claude mcp add scratch -- /path/to/scratch-mcp/.venv/bin/scratch-mcp --root ~/ScratchProjects`.
+Check a setup from any shell: `scratch-mcp --check` (prints what is installed); `scratch-mcp --setup-runtime` installs the engine.
+
+Not possible: claude.ai chat in the browser and the phone apps cannot start a local server (they only talk to hosted
+MCP servers), so this server is not available there.
+
 ## The tools
 
 Each tool is a group; call it with `action` and `args`. `action="help"` returns the exact schema of any action.

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "scratch": {
+      "command": "python3",
+      "args": ["-m", "scratch_mcp", "--root", "${CLAUDE_PROJECT_DIR:-.}/scratch-projects"],
+      "env": {
+        "SCRATCH_MCP_RUNTIME": "${HOME}/.cache/scratch-mcp/runtime"
+      }
+    }
+  }
+}
