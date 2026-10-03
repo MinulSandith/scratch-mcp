@@ -1,0 +1,309 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>scratch-mcp runtime harness</title></head>
+<body style="margin:0;background:#fff">
+<canvas id="stage" width="480" height="360" style="display:block"></canvas>
+<!-- Real Scratch: scratch-vm (the interpreter) and scratch-render (the WebGL renderer). -->
+<script src="scratch-vm.js"></script>
+<script src="scratch-render.js"></script>
+<script>
+// ---------------------------------------------------------------------------------------------
+// Minimal in-page asset storage (the scratch-storage npm package has no browser build).
+// ---------------------------------------------------------------------------------------------
+const AssetType = {
+  ImageBitmap: {contentType: 'image/png', name: 'ImageBitmap', runtimeFormat: 'png', immutable: true},
+  ImageVector: {contentType: 'image/svg+xml', name: 'ImageVector', runtimeFormat: 'svg', immutable: true},
+  Project: {contentType: 'application/json', name: 'Project', runtimeFormat: 'json', immutable: false},
+  Sound: {contentType: 'audio/x-wav', name: 'Sound', runtimeFormat: 'wav', immutable: true},
+  Sprite: {contentType: 'application/json', name: 'Sprite', runtimeFormat: 'json', immutable: true}
+};
+const DataFormat = {JPG: 'jpg', JSON: 'json', MP3: 'mp3', PNG: 'png', SB2: 'sb2', SB3: 'sb3', SVG: 'svg', WAV: 'wav'};
+let assetCounter = 0;
+class Asset {
+  constructor(assetType, assetId, dataFormat, data, generateId) {
+    this.assetType = assetType; this.dataFormat = dataFormat || assetType.runtimeFormat; this.data = data;
+    this.assetId = generateId ? 'a' + (assetCounter++) : assetId;
+  }
+  setData(data, dataFormat, generateId) { this.data = data; this.dataFormat = dataFormat || this.dataFormat; if (generateId) this.assetId = 'a' + (assetCounter++); }
+  decodeText() { return new TextDecoder().decode(this.data); }
+  encodeTextData(text, fmt, gen) { this.setData(new TextEncoder().encode(text), fmt, gen); }
+}
+const store = {
+  AssetType, DataFormat, Asset, cache: {},
+  scratchFetch: {scratchFetch: (...a) => fetch(...a), setMetadata() {}, RequestMetadata: {RunId: 'RunId'}},
+  defaultAssetId: {ImageBitmap: 'default', ImageVector: 'default'},
+  createAsset(t, f, d, id, g) { return new Asset(t, id, f, d, g); },
+  load() { return Promise.resolve(null); }, get() { return null; },
+  setStage() {}, setProjectHost() {}, setAssetHost() {}, addWebStore() {}, addOfficialScratchWebStore() {}
+};
+
+// ---------------------------------------------------------------------------------------------
+const KEYMAP = {'space': ' ', 'up arrow': 'ArrowUp', 'down arrow': 'ArrowDown', 'left arrow': 'ArrowLeft',
+  'right arrow': 'ArrowRight', 'enter': 'Enter'};
+const LOG_OPS = ['sound_play', 'sound_playuntildone', 'sound_stopallsounds', 'event_broadcast', 'event_broadcastandwait',
+  'looks_say', 'looks_sayforsecs', 'looks_think', 'looks_thinkforsecs', 'control_create_clone_of', 'control_delete_this_clone',
+  'sensing_askandwait', 'looks_switchcostumeto', 'looks_nextcostume', 'looks_switchbackdropto', 'looks_nextbackdrop',
+  'music_playDrumForBeats', 'music_playNoteForBeats', 'music_setInstrument', 'text2speech_speakAndWait', 'pen_stamp'];
+
+const sm = window.sm = {
+  vm: null, renderer: null, events: [], started: new Set(), hatsFired: {}, frames: 0, frameMs: 1000 / 30,
+  question: null, askQueue: [], said: {}, errors: [], booted: false,
+
+  now() { return this.vm ? this.vm.runtime.ioDevices.clock.projectTimer() : 0; },
+  log(type, data) { if (this.events.length < 20000) this.events.push({t: +this.now().toFixed(3), frame: this.frames, type, ...data}); },
+
+  async boot(b64, opts) {
+    opts = opts || {};
+    window.__clock.virtual = true; window.__clock.base = 1.7e12; window.__clock.ticks = 0;
+    this.events = []; this.started = new Set(); this.frames = 0; this.question = null; this.askQueue = []; this.errors = []; this.said = {};
+    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const vm = this.vm = new VirtualMachine();
+    vm.attachStorage(store);
+    const canvas = document.getElementById('stage');
+    this.renderer = new ScratchRender(canvas);
+    vm.attachRenderer(this.renderer);
+    vm.setCompatibilityMode(true);
+    vm.runtime.currentStepTime = this.frameMs;
+    await vm.loadProject(bin.buffer);
+    const rt = vm.runtime;
+    rt.on('SAY', (target, type, text) => { this.said[target.getName ? target.getName() : target.sprite.name] = {type, text}; if (text) this.log('say', {sprite: target.sprite ? target.sprite.name : 'Stage', text: String(text), kind: type}); });
+    rt.on('QUESTION', q => { this.question = q; });
+    rt.on('PROJECT_STOP_ALL', () => { this.askQueue = []; });
+    const pushThread = rt._pushThread.bind(rt);   // every script start, for every sprite and clone
+    rt._pushThread = (id, target, opts) => { this.started.add(id); return pushThread(id, target, opts); };
+    rt.on('PROJECT_RUN_START', () => this.log('run_start', {}));
+    rt.on('PROJECT_RUN_STOP', () => this.log('run_stop', {}));
+    const prims = rt._primitives;
+    for (const op of LOG_OPS) {
+      const orig = prims[op];
+      if (!orig) continue;
+      prims[op] = (args, util) => {
+        try {
+          const sprite = util && util.target ? (util.target.isStage ? 'Stage' : util.target.sprite.name) : '?';
+          const clone = util && util.target && !util.target.isOriginal;
+          const summary = {};
+          for (const [k, v] of Object.entries(args || {})) summary[k] = (v && typeof v === 'object') ? (v.name !== undefined ? v.name : JSON.stringify(v).slice(0, 80)) : v;
+          this.log(op, {sprite, clone: !!clone, args: summary});
+        } catch (e) { /* logging must never break the project */ }
+        if (op === 'sensing_askandwait') {
+          const q = {text: String(args.QUESTION)};
+          this.askQueue.push(q);
+          const p = orig(args, util);
+          Promise.resolve(p).then(() => { this.askQueue = this.askQueue.filter(x => x !== q); });
+          return p;
+        }
+        return orig(args, util);
+      };
+    }
+    rt.on('RUNTIME_STEP_START', () => {});
+    this.booted = true;
+    this.renderer.draw();
+    return this.summary();
+  },
+
+  summary() {
+    return this.vm.runtime.targets.filter(t => t.isOriginal).map(t => t.getName());
+  },
+
+  // -------------------------------------------------------------------------- control
+  flag() { this.vm.greenFlag(); this.log('green_flag', {}); },
+  stopAll() { this.vm.stopAll(); this.log('stop_all', {}); },
+
+  advance(frames, ms) {
+    const rt = this.vm.runtime, c = window.__clock;
+    for (let i = 0; i < frames; i++) {
+      const target = c.base + (ms || this.frameMs);
+      c.base = Math.max(target, c.base + c.ticks * c.tickMs);
+      c.ticks = 0;
+      rt._step();
+      this.frames++;
+    }
+  },
+
+  // run up to `frames` frames, stopping early when `until` (condition) holds. Returns {frames, met, actual}.
+  run(frames, ms, until) {
+    let done = 0, last = null;
+    while (done < frames) {
+      this.advance(1, ms); done++;
+      if (until) { last = this.check(until); if (last.ok) return {frames: done, met: true, actual: last.actual}; }
+    }
+    return {frames: done, met: until ? false : null, actual: last ? last.actual : null};
+  },
+
+  // -------------------------------------------------------------------------- input
+  key(name, isDown) {
+    const key = KEYMAP[name.toLowerCase()] || (name.length === 1 ? name : name);
+    this.vm.postIOData('keyboard', {key, isDown});
+    this.log(isDown ? 'key_down' : 'key_up', {key: name});
+  },
+  mouse(sx, sy, isDown) {
+    this.vm.postIOData('mouse', {x: sx + 240, y: 180 - sy, canvasWidth: 480, canvasHeight: 360, isDown: !!isDown});
+    this.mousePos = [sx, sy];
+    this.log(isDown === undefined ? 'mouse_move' : (isDown ? 'mouse_down' : 'mouse_up'), {x: sx, y: sy});
+  },
+  mouseUp() { const p = this.mousePos || [0, 0]; this.mouse(p[0], p[1], false); },
+  answer(text) { this.vm.runtime.emit('ANSWER', text); this.log('answer', {text}); },
+
+  activeQuestion() { return this.askQueue.length ? this.askQueue[0].text : null; },
+
+  // -------------------------------------------------------------------------- state
+  target(name) {
+    const rt = this.vm.runtime;
+    const t = name === 'Stage' ? rt.getTargetForStage() : rt.getSpriteTargetByName(name);
+    if (!t) throw new Error(`No sprite named '${name}'`);
+    return t;
+  },
+  targetInfo(t) {
+    const info = {name: t.getName(), isStage: t.isStage, clone: !t.isOriginal, id: t.id};
+    const cs = t.getCostumes()[t.currentCostume];
+    info.costume = cs ? cs.name : null; info.costumeNumber = t.currentCostume + 1;
+    info.volume = t.volume;
+    if (t.isStage) return info;
+    Object.assign(info, {x: +t.x.toFixed(2), y: +t.y.toFixed(2), size: +t.size.toFixed(2), direction: +t.direction.toFixed(2),
+      visible: t.visible, draggable: t.draggable, rotationStyle: t.rotationStyle,
+      effects: Object.fromEntries(Object.entries(t.effects).filter(([k, v]) => v))});
+    const said = this.said[t.getName()];
+    info.say = said && said.text ? said : null;
+    return info;
+  },
+  variables() {
+    const out = [];
+    for (const t of this.vm.runtime.targets) {
+      if (!t.isOriginal) continue;
+      for (const v of Object.values(t.variables)) {
+        if (v.type === 'broadcast_msg') continue;
+        out.push({name: v.name, type: v.type === 'list' ? 'list' : 'variable', scope: t.isStage ? 'global' : t.getName(),
+          value: v.type === 'list' ? v.value.slice(0, 200) : v.value, ...(v.type === 'list' ? {length: v.value.length} : {})});
+      }
+    }
+    return out;
+  },
+  state(opts) {
+    opts = opts || {};
+    const rt = this.vm.runtime;
+    const targets = rt.targets.filter(t => opts.clones ? true : t.isOriginal).map(t => this.targetInfo(t));
+    return {time: +this.now().toFixed(3), frames: this.frames, running_threads: rt.threads.filter(t => !t.isKilled && t.status !== 4).length,
+      targets, variables: this.variables(), question: this.activeQuestion(), clones: rt.targets.filter(t => !t.isOriginal).length,
+      answer: rt._primitives.sensing_answer ? rt._primitives.sensing_answer() : '', timer: +this.now().toFixed(3)};
+  },
+  clones() {
+    return this.vm.runtime.targets.filter(t => !t.isOriginal).map(t => ({...this.targetInfo(t), parent: t.sprite.name}));
+  },
+  createClone(name) {
+    const t = this.target(name);
+    if (!this.vm.runtime.clonesAvailable()) throw new Error('Clone limit (300) reached');
+    const c = t.makeClone();
+    this.vm.runtime.addTarget(c);
+    c.goBehindOther(t);
+    return this.targetInfo(c);
+  },
+  deleteClones(name) {
+    let n = 0;
+    for (const t of this.vm.runtime.targets.slice()) {
+      if (!t.isOriginal && (!name || t.sprite.name === name)) { this.vm.runtime.disposeTarget(t); this.vm.runtime.stopForTarget(t); n++; }
+    }
+    return n;
+  },
+  setVariable(name, value, sprite) {
+    const t = sprite ? this.target(sprite) : this.vm.runtime.getTargetForStage();
+    const v = t.lookupVariableByNameAndType(name, '') || this.vm.runtime.getTargetForStage().lookupVariableByNameAndType(name, '');
+    if (!v) throw new Error(`No variable named '${name}'`);
+    v.value = value;
+  },
+  setSprite(name, props) {
+    const t = this.target(name);
+    if ('x' in props || 'y' in props) t.setXY('x' in props ? props.x : t.x, 'y' in props ? props.y : t.y);
+    if ('direction' in props) t.setDirection(props.direction);
+    if ('size' in props) t.setSize(props.size);
+    if ('visible' in props) t.setVisible(props.visible);
+    return this.targetInfo(t);
+  },
+  threads() {
+    const rt = this.vm.runtime;
+    return rt.threads.filter(t => !t.isKilled).map(t => ({sprite: t.target.isStage ? 'Stage' : t.target.sprite.name, clone: !t.target.isOriginal,
+      top_block: t.topBlock, opcode: (t.target.blocks.getBlock(t.topBlock) || {}).opcode, status: t.status}));
+  },
+  scriptsStarted() { return Array.from(this.started); },
+  eventsSince(sinceFrame, type, limit) {
+    const out = this.events.filter(e => e.frame >= sinceFrame && (!type || e.type === type));
+    return {total: out.length, events: limit ? out.slice(-limit) : out};
+  },
+  clearEvents() { this.events = []; return true; },
+  hatScripts() {
+    // every top-level script that begins with a hat, per target, so callers can tell which never started
+    const out = [];
+    for (const t of this.vm.runtime.targets.filter(x => x.isOriginal)) {
+      const blocks = t.blocks;
+      for (const id of blocks.getScripts()) {
+        const b = blocks.getBlock(id);
+        if (b && this.vm.runtime._hats[b.opcode]) out.push({sprite: t.getName(), id, opcode: b.opcode});
+      }
+    }
+    return out;
+  },
+
+  // -------------------------------------------------------------------------- conditions
+  cmp(op, a, b) {
+    switch (op) {
+      case '==': case '=': return a == b; // eslint-disable-line eqeqeq
+      case '!=': return a != b; // eslint-disable-line eqeqeq
+      case '>': return Number(a) > Number(b); case '>=': return Number(a) >= Number(b);
+      case '<': return Number(a) < Number(b); case '<=': return Number(a) <= Number(b);
+      case 'contains': return String(a).toLowerCase().includes(String(b).toLowerCase());
+      case 'in': return Array.isArray(b) && b.some(x => x == a); // eslint-disable-line eqeqeq
+      default: throw new Error(`Unknown comparison '${op}'`);
+    }
+  },
+  check(c) {
+    const type = c.type;
+    if (type === 'variable') {
+      const v = this.variables().filter(x => x.name === c.name && (!c.sprite || x.scope === c.sprite || x.scope === 'global'));
+      if (!v.length) throw new Error(`No variable named '${c.name}'`);
+      const actual = c.index !== undefined ? v[0].value[c.index - 1] : (v[0].type === 'list' ? v[0].length : v[0].value);
+      return {ok: this.cmp(c.op || '==', actual, c.value), actual};
+    }
+    if (type === 'sprite') {
+      const t = this.target(c.sprite);
+      let actual;
+      if (c.property === 'say') { const s = this.said[c.sprite]; actual = s && s.text ? s.text : ''; }
+      else if (c.property === 'costume') actual = t.getCostumes()[t.currentCostume].name;
+      else actual = t[c.property === 'direction' ? 'direction' : c.property];
+      return {ok: this.cmp(c.op || '==', actual, c.value), actual};
+    }
+    if (type === 'touching') {
+      const t = this.target(c.a);
+      const actual = c.b === 'edge' ? t.isTouchingEdge() : (c.b === 'mouse' ? t.isTouchingPoint(...(this.mousePos || [0, 0])) : t.isTouchingSprite(c.b));
+      return {ok: actual === (c.value !== false), actual};
+    }
+    if (type === 'count') {
+      const evs = this.events.filter(e => e.type === c.event && (!c.sprite || e.sprite === c.sprite) &&
+        (!c.arg || Object.values(e.args || {}).some(v => String(v).toLowerCase() === String(c.arg).toLowerCase())));
+      return {ok: this.cmp(c.op || '>=', evs.length, c.value === undefined ? 1 : c.value), actual: evs.length};
+    }
+    if (type === 'clones') {
+      const n = this.vm.runtime.targets.filter(t => !t.isOriginal && (!c.sprite || t.sprite.name === c.sprite)).length;
+      return {ok: this.cmp(c.op || '>=', n, c.value), actual: n};
+    }
+    if (type === 'costume_changed') {
+      const evs = this.events.filter(e => (e.type === 'looks_switchcostumeto' || e.type === 'looks_nextcostume') && e.sprite === c.sprite);
+      return {ok: evs.length >= (c.value === undefined ? 1 : c.value), actual: evs.length};
+    }
+    if (type === 'thread_running') {
+      const n = this.threads().filter(t => !c.sprite || t.sprite === c.sprite).length;
+      return {ok: this.cmp(c.op || '>', n, c.value === undefined ? 0 : c.value), actual: n};
+    }
+    if (type === 'question') return {ok: this.cmp(c.op || 'contains', this.activeQuestion() || '', c.value) && this.activeQuestion() !== null, actual: this.activeQuestion()};
+    throw new Error(`Unknown condition type '${type}'. Use variable, sprite, touching, count, clones, costume_changed, thread_running or question.`);
+  },
+
+  // -------------------------------------------------------------------------- picture
+  draw() { this.renderer.draw(); return true; },
+  setResolution(scale) {
+    const canvas = document.getElementById('stage');
+    this.renderer.resize(480 * scale, 360 * scale);
+    this.renderer.setUseHighQualityRender(scale > 1);
+    canvas.style.width = '480px'; canvas.style.height = '360px';
+    this.renderer.draw();
+  }
+};
+</script>
+</body></html>
