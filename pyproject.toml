@@ -4,14 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scratch-mcp"
-version = "0.1.0"
-description = "Local MCP server that lets Claude Desktop read and edit Scratch 3 (.sb3) projects"
+version = "0.2.0"
+description = "MCP server that lets an AI agent operate Scratch 3 like a person using the editor: build, run, test, debug and export projects"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["mcp>=1.2.0,<2"]  # FastMCP API (renamed in mcp 2.x)
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+# Needed for screenshots, costume previews, running projects, tests and video: a headless Chromium.
+runtime = ["playwright>=1.40"]
+dev = ["pytest>=7", "playwright>=1.40", "anyio"]
 
 [project.scripts]
 scratch-mcp = "scratch_mcp.server:main"

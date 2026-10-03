@@ -468,3 +468,79 @@ def test_say_for_secs_and_sound_until_done_use_simulated_time(game):
     assert snd["condition_met"] and 0.55 < snd["ran_seconds"] < 1.0, snd["ran_seconds"]      # 5 x 0.14 s of sound
     assert out[9]["total"] == 5
     assert out[10]["time"] > 0 and out[10]["time"] < 20       # the project timer follows the simulated clock
+
+
+def test_watchdog_kills_a_stuck_runtime_and_it_can_be_restarted(game):
+    """Forces a call that outlasts its real-time budget: the page is closed, the error is explicit, restart works."""
+    async def go():
+        rm = game.runtime
+        out = {}
+        try:
+            await registry.dispatch("runtime_manager", game, "start", {"green_flag": True})
+            key = "game.sb3"
+            try:
+                await rm.call(key, "run", 10_000_000, 1000 / 30, None, timeout=1.5)   # far more work than 1.5 s allows
+            except WorkspaceError as exc:
+                out["error"] = str(exc)
+            try:
+                await registry.dispatch("runtime_manager", game, "state", {"include_clones": False})
+            except WorkspaceError as exc:
+                out["after"] = str(exc)
+            # state() auto-starts a fresh page when the old one is dead
+            out["restarted"] = (await registry.dispatch("runtime_manager", game, "restart", {"run_seconds": 0.2}))["state"]["time"]
+        finally:
+            await rm.close_all()
+        return out
+
+    out = anyio.run(go)
+    assert "Infinite loop detected" in out["error"] and "never yields" in out["error"]
+    assert out["restarted"] > 0
+
+
+# ---------------------------------------------------------------- run-time sandbox and the remaining extensions
+
+def test_runtime_refuses_outside_code_and_network(game):
+    """Custom extension URLs are dropped before the VM sees them and the page cannot reach the internet."""
+    from scratch_mcp.runtime.manager import runtime_safe
+
+    s = game.session(None)
+    dirty = json_copy = __import__("json").loads(__import__("json").dumps(s.project))
+    dirty["extensionURLs"] = {"evil": "https://example.com/evil.js"}
+    dirty["extensions"] = ["pen", "madeup"]
+    safe, notes = runtime_safe(dirty)
+    assert "extensionURLs" not in safe and safe["extensions"] == ["pen"] and len(notes) == 2 and json_copy is dirty
+
+    async def go():
+        try:
+            await registry.dispatch("runtime_manager", game, "start", {})
+            rs = game.runtime.sessions["game.sb3"]
+            reached = await rs.page.evaluate("() => fetch('https://example.com/').then(r => 'reached', e => 'blocked')")
+            file_read = await rs.page.evaluate("() => fetch('file:///etc/passwd').then(r => 'read', e => 'blocked')")
+            return reached, file_read, list(game.browser.blocked)
+        finally:
+            await game.runtime.close_all()
+
+    reached, file_read, blocked = anyio.run(go)
+    assert reached == "blocked" and file_read == "blocked" and any("example.com" in b for b in blocked)
+
+
+def test_music_and_makey_makey_extensions_run(game):
+    run(game, "script_manager", "add_tree", sprite="Player", scripts=[
+        {"opcode": "event_whenflagclicked", "next": [
+            {"opcode": "music_setTempo", "inputs": {"TEMPO": 120}},
+            {"opcode": "music_playNoteForBeats", "inputs": {"NOTE": 60, "BEATS": 0.5}},
+            {"opcode": "music_playDrumForBeats", "inputs": {"DRUM": 1, "BEATS": 0.25}},
+            {"opcode": "data_setvariableto", "fields": {"VARIABLE": "score"}, "inputs": {"VALUE": 5}}]},
+        {"opcode": "makeymakey_whenMakeyKeyPressed", "inputs": {"KEY": "SPACE"}, "next": [
+            {"opcode": "data_setvariableto", "fields": {"VARIABLE": "score"}, "inputs": {"VALUE": 77}}]}])
+    R = "runtime_manager"
+    out = arun(game, [("extension_manager", "verify", {"run_seconds": 0.2}),
+                      (R, "start", {"green_flag": True}),
+                      (R, "run", {"seconds": 1.2, "until": {"type": "variable", "name": "score", "op": "==", "value": 5}}),
+                      ("input_manager", "key_press", {"key": "space", "then_run": 0.3}),
+                      (R, "variables", {}), ("debug_manager", "errors", {})])
+    ver, _, played, _, variables, errors = out
+    assert ver["all_loaded"] and {"music", "makeymakey"} <= set(ver["loaded_in_vm"]) and ver["runtime_errors"] == []
+    assert played["condition_met"] and 0.33 <= played["ran_seconds"] <= 0.6      # 0.5 beat note + 0.25 beat drum at 120 bpm = 0.375 s
+    assert {v["name"]: v["value"] for v in variables["variables"]}["score"] in (77, "77")
+    assert errors["errors"] == []

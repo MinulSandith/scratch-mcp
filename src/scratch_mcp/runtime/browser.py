@@ -16,8 +16,14 @@ INSTALL_HELP = (
     "or point SCRATCH_MCP_CHROMIUM at a Chrome/Chromium executable."
 )
 
-LAUNCH_ARGS = ["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist", "--allow-file-access-from-files",
-               "--autoplay-policy=no-user-gesture-required", "--no-sandbox"]
+def launch_args() -> list[str]:
+    args = ["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"]
+    # Chromium refuses to start its sandbox as root (typical in containers); otherwise keep the sandbox on.
+    if (hasattr(os, "geteuid") and os.geteuid() == 0) or os.environ.get("SCRATCH_MCP_NO_SANDBOX") == "1":
+        args.append("--no-sandbox")
+    return args
+
+
 
 
 def find_chromium() -> str | None:
@@ -37,6 +43,7 @@ class BrowserService:
     def __init__(self) -> None:
         self._pw: Any = None
         self._browser: Any = None
+        self.blocked: list[str] = []  # network requests the sandbox refused (for diagnostics)
 
     async def browser(self):
         if self._browser is not None and self._browser.is_connected():
@@ -50,7 +57,7 @@ class BrowserService:
         errors = []
         for exe in (None, find_chromium()):  # playwright's own browser first, then any Chromium we can find
             try:
-                kwargs: dict[str, Any] = {"args": LAUNCH_ARGS}
+                kwargs: dict[str, Any] = {"args": launch_args()}
                 if exe:
                     kwargs["executable_path"] = exe
                 self._browser = await self._pw.chromium.launch(**kwargs)
@@ -59,9 +66,21 @@ class BrowserService:
                 errors.append(f"{exe or 'default'}: {str(exc).splitlines()[0]}")
         raise WorkspaceError("Could not start Chromium (" + "; ".join(errors) + ").\n" + INSTALL_HELP)
 
-    async def new_page(self, width: int = 480, height: int = 360, **kw):
+    async def new_page(self, width: int = 480, height: int = 360, *, lock_network: bool = True, **kw):
+        """A fresh page. By default every http(s) request is blocked: a project being run can't phone home, and a
+        malicious one can't load code. Set SCRATCH_MCP_ALLOW_NETWORK=1 to let text-to-speech/translate reach Scratch."""
         b = await self.browser()
-        return await b.new_page(viewport={"width": width, "height": height}, **kw)
+        page = await b.new_page(viewport={"width": width, "height": height}, **kw)
+        if lock_network and os.environ.get("SCRATCH_MCP_ALLOW_NETWORK") != "1":
+            async def gate(route):
+                if route.request.url.startswith(("file:", "data:", "blob:", "about:")):
+                    await route.continue_()
+                else:
+                    self.blocked.append(route.request.url[:200])
+                    await route.abort()
+
+            await page.route("**/*", gate)
+        return page
 
     async def rasterize_svg(self, svg: str, width: int, height: int, scale: float = 1.0, background: str | None = None) -> bytes:
         """Render SVG text to PNG bytes (transparent background unless given)."""

@@ -414,3 +414,25 @@ def test_library_with_mock_network(pm, tmp_path, monkeypatch):
         call(pm, "asset_manager", "library_add", kind="sounds", name="Nope", sprite="Ball")
     with pytest.raises(WorkspaceError, match="kind must be"):
         call(pm, "asset_manager", "library_search", kind="gifs")
+
+
+def test_import_mp3_via_ffmpeg(pm, tmp_path):
+    import shutil
+    import subprocess
+
+    if not shutil.which("ffmpeg"):
+        pytest.skip("ffmpeg not installed")
+    from scratch_mcp.sounds import render_preset
+
+    wav = tmp_path / "a.wav"
+    wav.write_bytes(render_preset("chime"))
+    mp3 = tmp_path / "a.mp3"
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(wav), str(mp3)], capture_output=True)
+    if r.returncode != 0 or not mp3.exists():
+        pytest.skip("this ffmpeg can't encode mp3")
+    out = call(pm, "sound_manager", "import_sound", sprite="Ball", name="song", data_base64=base64.b64encode(mp3.read_bytes()).decode())
+    assert out["added"] == "song" and 0.9 < out["seconds"] < 1.4        # the chime is 1.1 s
+    entry = [s for s in call(pm, "sound_manager", "list", sprite="Ball")["sounds"] if s["name"] == "song"][0]
+    assert entry["format"] == "wav" and entry["rate"] == 22050
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="song", operation="reverse")   # converted audio is editable
+    valid(pm)

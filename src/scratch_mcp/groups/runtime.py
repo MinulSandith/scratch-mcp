@@ -71,6 +71,8 @@ async def start(ctx: Ctx, project: str | None = None, green_flag: bool = False, 
     rs = await rm.start(session.name, session.project, session.assets)
     rs.booted_hash = project_hash(session)
     out: dict[str, Any] = {"project": session.name, "targets": getattr(rs, "targets", [])}
+    if rs.notes:
+        out["notes"] = rs.notes
     if green_flag:
         await rm.call(session.name, "flag")
         if run_seconds:

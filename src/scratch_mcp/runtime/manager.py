@@ -64,6 +64,25 @@ SETUP_HELP = ("The Scratch runtime is not installed. Run runtime_manager setup o
               "set SCRATCH_MCP_RUNTIME to a folder containing scratch-vm.js and scratch-render.js.")
 
 
+def runtime_safe(project: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """Copy of the project for the VM without anything that would make it load outside code.
+
+    Standard Scratch projects only name built-in extensions; a project may also carry ``extensionURLs`` (custom
+    extensions = arbitrary JavaScript from a URL). Those are removed (and reported) before the VM sees them."""
+    from .. import schema
+
+    safe = json.loads(json.dumps(project))
+    notes = []
+    if safe.pop("extensionURLs", None):
+        notes.append("custom extension URLs were ignored (they would load arbitrary JavaScript)")
+    builtin = set(schema.extensions())
+    unknown = [e for e in safe.get("extensions") or [] if e not in builtin]
+    if unknown:
+        safe["extensions"] = [e for e in safe["extensions"] if e in builtin]
+        notes.append(f"unknown extensions not loaded: {', '.join(unknown)}")
+    return safe, notes
+
+
 def sb3_bytes(project: dict[str, Any], assets: dict[str, bytes]) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -80,11 +99,12 @@ class RuntimeSession:
     console: list[dict[str, str]] = field(default_factory=list)
     dead: str | None = None  # reason, if the page had to be killed
     flagged: bool = False
+    notes: list[str] = field(default_factory=list)
     booted_hash: str = ""
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
-NOISE = ("GL Driver Message", "GPU stall", "willReadFrequently", "No audio engine present", "Canvas2D", "favicon",
+NOISE = ("No Audio Context Detected", "GL Driver Message", "GPU stall", "willReadFrequently", "No audio engine present", "Canvas2D", "favicon",
          "cannot load sound", "Failed to load resource")
 
 
@@ -153,10 +173,11 @@ class RuntimeManager:
         page = await self.ctx.browser.new_page(480, 360)
         rs = RuntimeSession(key, page)
         page.on("console", lambda m: rs.console.append({"type": m.type, "text": m.text[:500]}) if not any(n in m.text for n in NOISE) else None)
-        page.on("pageerror", lambda e: rs.console.append({"type": "pageerror", "text": str(e)[:500]}))
+        page.on("pageerror", lambda e: rs.console.append({"type": "pageerror", "text": str(e)[:500]}) if not any(n in str(e) for n in NOISE) else None)
         await page.add_init_script(CLOCK_INIT)
         await page.goto(harness.as_uri())
         await page.wait_for_function("typeof window.sm !== 'undefined'", timeout=30000)
+        project, rs.notes = runtime_safe(project)  # type: ignore[attr-defined]
         data = base64.b64encode(sb3_bytes(project, assets)).decode()
         try:
             names = await asyncio.wait_for(page.evaluate("b => window.sm.boot(b)", data), timeout=60)

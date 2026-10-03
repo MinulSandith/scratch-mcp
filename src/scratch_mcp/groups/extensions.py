@@ -25,7 +25,7 @@ GROUP_DOCS[G] = (
 REQUIREMENTS: dict[str, dict[str, Any]] = {
     "pen": {"hardware": False, "service": None, "runtime_support": "full", "note": "Draws on the stage; screenshots include pen trails."},
     "music": {"hardware": False, "service": None, "runtime_support": "logic only",
-              "note": "Notes/drums/tempo blocks run and are logged, but no audio is produced in the headless runtime."},
+              "note": "Notes/drums/tempo blocks run with correct beat timing, but no audio is produced in the headless runtime."},
     "videoSensing": {"hardware": "webcam", "service": None, "runtime_support": "none",
                      "note": "Needs a camera; in the headless runtime the video is empty, so motion/direction read 0."},
     "text2speech": {"hardware": False, "service": "Scratch speech synthesis server (internet)", "runtime_support": "partial",
