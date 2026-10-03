@@ -12,7 +12,7 @@ from scratch_mcp.runtime.browser import find_chromium
 
 EXPECTED_TOOLS = {
     "project_manager", "sprite_manager", "script_manager", "block_manager", "variable_manager", "costume_manager",
-    "backdrop_manager", "sound_manager", "asset_manager", "runtime_manager", "input_manager", "extension_manager",
+    "backdrop_manager", "sound_manager", "asset_manager", "runtime_manager", "input_manager", "extension_manager", "animation_manager",
     "inspection_manager", "debug_manager", "testing_manager", "export_manager", "online_manager",
 }
 

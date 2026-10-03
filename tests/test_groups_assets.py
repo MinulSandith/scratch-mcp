@@ -436,3 +436,33 @@ def test_import_mp3_via_ffmpeg(pm, tmp_path):
     assert entry["format"] == "wav" and entry["rate"] == 22050
     call(pm, "sound_manager", "edit", sprite="Ball", sound="song", operation="reverse")   # converted audio is editable
     valid(pm)
+
+
+def test_reset_history_and_backup_listing(pm, root):
+    call(pm, "project_manager", "set_autosave", enabled=False)
+    call(pm, "sprite_manager", "set", sprite="Cat", x=11)
+    call(pm, "sprite_manager", "set", sprite="Cat", y=22)
+    hist = call(pm, "project_manager", "history")
+    assert hist["undo"] == ["set sprite properties", "set sprite properties"] and hist["redo"] == []
+    assert call(pm, "project_manager", "info")["dirty"] is True
+    call(pm, "project_manager", "reset")                          # throw the unsaved edits away
+    info = call(pm, "project_manager", "info")
+    assert info["dirty"] is False and not info["can_undo"]
+    assert (call(pm, "sprite_manager", "get", sprite="Cat")["x"], call(pm, "sprite_manager", "get", sprite="Cat")["y"]) == (0, 0)
+    assert call(pm, "project_manager", "list_backups")["backups"] == []
+    call(pm, "project_manager", "set_autosave", enabled=True)
+    out = call(pm, "sprite_manager", "set", sprite="Cat", x=5)
+    assert out and call(pm, "project_manager", "list_backups")["backups"][0]["path"].startswith("backups/sample.")
+    first = call(pm, "project_manager", "list_backups")["backups"][0]["path"]
+    with pytest.raises(WorkspaceError, match="read-only"):
+        call(pm, "project_manager", "import_sb3", name="x", source_path=first)      # backups aren't projects...
+    # ...restoring is explicit: as a copy, or over the original (the current file is backed up first)
+    copy = call(pm, "project_manager", "restore_backup", backup=first, as_name="restored")
+    assert copy["restored"] == "restored.sb3" and call(pm, "sprite_manager", "get", sprite="Cat")["x"] == 0
+    call(pm, "project_manager", "open", name="sample")
+    assert call(pm, "sprite_manager", "get", sprite="Cat")["x"] == 5
+    over = call(pm, "project_manager", "restore_backup", backup=first)
+    assert over["restored"] == "sample.sb3" and len(over["backups_made"]) == 1
+    assert call(pm, "sprite_manager", "get", sprite="Cat")["x"] == 0
+    with pytest.raises(WorkspaceError, match="not a backup"):
+        call(pm, "project_manager", "restore_backup", backup="sample.sb3")

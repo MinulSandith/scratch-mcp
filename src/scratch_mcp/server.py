@@ -26,7 +26,7 @@ ENV_ROOT = "SCRATCH_PROJECTS_DIR"
 
 # modules under scratch_mcp.groups; importing one registers its actions
 GROUP_MODULES = ["project", "sprites", "scripts", "blocks", "variables", "costumes", "backdrops", "sounds", "assets",
-                 "runtime", "inputs", "extensions", "inspection", "debug", "testing", "export", "online"]
+                 "runtime", "inputs", "extensions", "animation", "inspection", "debug", "testing", "export", "online"]
 
 INSTRUCTIONS = """\
 You operate Scratch 3 projects (.sb3) in the user's Scratch folder, like a person using the Scratch editor - but through tools.

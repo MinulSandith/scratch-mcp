@@ -299,3 +299,39 @@ def save_json(ctx: Ctx, project_json: str | dict[str, Any], project: str | None 
         h.project.update(data)
     r = validate_project(session.project, set(session.assets))
     return {"saved": session.name, "warnings": r.warnings[:20]}
+
+
+@action(G)
+def restore_backup(ctx: Ctx, backup: str, as_name: str | None = None, overwrite: bool = False) -> dict:
+    """Bring a backup back (see list_backups). Without as_name it replaces the project it was made from - the current file is backed up first, so the restore itself can be undone by restoring again.
+
+    Args:
+        backup: path from list_backups, e.g. "backups/Game.20261003-063847.sb3".
+        as_name: restore as a new project with this name instead.
+        overwrite: required to replace an existing project when as_name names one.
+    """
+    import re
+
+    path = ctx.ws.resolve_file(backup)
+    if not path.is_relative_to(ctx.ws.backup_dir) or path.suffix.lower() != ".sb3":
+        raise WorkspaceError("That is not a backup file. Use list_backups to see them.")
+    sb3 = ctx.ws.load(path)
+    result = validate_project(sb3.project, set(sb3.assets))
+    if not result.ok:
+        raise WorkspaceError("The backup is damaged:\n" + result.format())
+    rel = path.relative_to(ctx.ws.backup_dir)
+    original = (rel.parent / (re.sub(r"\.\d{8}-\d{6}(-\d+)?$", "", path.stem) + ".sb3")).as_posix()
+    if original.startswith("deleted/"):
+        original = original[len("deleted/"):]
+    target = as_name or original
+    key, dest = ctx.store.key_for(target)
+    if dest.exists() and not (overwrite or not as_name):
+        raise WorkspaceError(f"{key} already exists. Pass overwrite=true to replace it (a backup is made).")
+    ctx.store.sessions.pop(key, None)
+    if dest.exists():
+        ctx.store.backup_events.append(ctx.ws.display(ctx.ws.backup(dest)))
+        ctx.ws.write(dest, sb3, overwrite=True)
+        session = ctx.store.open(key, reload=True)
+    else:
+        session = ctx.store.create(target, sb3.project, sb3.assets)
+    return {"restored": session.name, "from": backup, **project_info(session)}

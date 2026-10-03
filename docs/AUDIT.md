@@ -51,7 +51,7 @@ No broken capabilities were found; the 81 original tests passed.
    `ProjectStore.edit`, which works on a copy, validates, then commits with an undo snapshot. Autosave is on by default
    (each write to an existing file is preceded by a timestamped backup, and every response lists `backups_made`);
    turning it off gives real *unsaved-changes* tracking (`dirty`) until `save`. History: 100 steps per project.
-2. **Action registry (`registry.py`)** - 17 tools, each a *group* with many `action`s (206 in total) instead of 200 flat
+2. **Action registry (`registry.py`)** - 18 tools, each a *group* with many `action`s (214 in total) instead of 200 flat
    tools. Each action has a strict pydantic model built from its type hints (unknown arguments are rejected), validated
    server-side with precise errors, plus a built-in `help` action that returns the exact JSON schema. Tool descriptions
    are generated from the same source, so docs cannot drift (`docs/TOOLS.md` is generated too).
@@ -90,7 +90,7 @@ stock art and sound presets. Every original tool maps to an action:
 
 ## 3. Dependencies and compatibility
 
-* Python 3.10, 3.11, 3.13 tested (same 149-test suite). `mcp>=1.2,<2`.
+* Python 3.10, 3.11, 3.13 tested (same 154-test suite). `mcp>=1.2,<2`.
 * Optional: `playwright` + a Chromium (screenshots, previews, running projects, video); `node`/`npm` once (runtime install);
   `ffmpeg` (video, mp3/ogg import).
 * `scratch-vm` 5.0.300 and `scratch-render` 2.2.84 are pinned (the combination tested). The npm `scratch-storage` package has no

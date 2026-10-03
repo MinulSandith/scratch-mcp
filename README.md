@@ -11,10 +11,10 @@ finished `.sb3` (or a recorded MP4).
 
 It works only inside one folder you choose, backs up before every overwrite, and every edit can be undone.
 
-* **17 tools, 206 actions** (full list: [docs/TOOLS.md](docs/TOOLS.md)) - [audit and design notes](docs/AUDIT.md)
+* **18 tools, 214 actions** (full list: [docs/TOOLS.md](docs/TOOLS.md)) - [audit and design notes](docs/AUDIT.md)
 * **293 Scratch blocks** incl. 11 built-in extensions, taken from Scratch's own source (nothing hand-written)
 * **Real Scratch VM + renderer** (headless Chromium), simulated time at 30 fps - deterministic and fast
-* **149 automated tests** on Python 3.10, 3.11 and 3.13, including a full "build an adventure game through MCP" run
+* **154 automated tests** on Python 3.10, 3.11 and 3.13, including a full "build an adventure game through MCP" run
 
 ## Install
 
@@ -99,7 +99,7 @@ Each tool is a group; call it with `action` and `args`. `action="help"` returns 
 
 | Tool | What it does |
 | --- | --- |
-| `project_manager` | create, open, save, save as, duplicate, rename, delete (to `backups/deleted`), import `.sb3`, metadata, unsaved-change tracking, undo/redo, reset, validate, raw `project.json` replace |
+| `project_manager` | create, open, save, save as, duplicate, rename, delete (to `backups/deleted`), import `.sb3`, metadata, unsaved-change tracking, undo/redo, reset, list/restore backups, validate, raw `project.json` replace |
 | `sprite_manager` | create (blank / SVG / image / stock / `.sprite3`), delete, duplicate, rename, select, position/size/direction/rotation style/visibility/draggable/layer/volume |
 | `script_manager` | whole scripts from scratchblocks text **or JSON trees**, list/inspect/move/copy/delete/arrange scripts, custom blocks |
 | `block_manager` | catalog of all opcodes, add/insert/delete/move/connect/disconnect/duplicate any block, set inputs and dropdowns, comments, rule checking |
@@ -110,6 +110,7 @@ Each tool is a group; call it with `action` and `args`. `action="help"` returns 
 | `asset_manager` | files inside the project, prune unused, **search and add from Scratch's library** |
 | `runtime_manager` | run the project in the real VM: green flag, stop, run/step simulated time, state, variables, clones, run log, **screenshots**, snapshot + pixel diff |
 | `input_manager` | keys (press/hold/release), mouse move/click/drag, click a sprite, answer prompts |
+| `animation_manager` | one-call cartoon patterns that write ordinary scripts: costume cycles (walk/run/idle), blinking, jumps, entrances/exits/paths, multi-character dialogue, fade/wipe transitions, scene timelines |
 | `extension_manager` | list/describe/enable/disable extensions, verify they load, what each needs (hardware, internet) |
 | `inspection_manager` | overview of everything, per-component views, block search, block graph, "who uses this", raw JSON |
 | `debug_manager` | static check (broken references, dead broadcasts, orphan blocks, hang risks), scripts that never start, errors, hang check, `diagnose` |
@@ -139,7 +140,7 @@ Typical loop for the agent: `inspection_manager overview` -> build with the mana
 ## What is verified, and what is not
 
 Status uses only these words: **Implemented** (works, tested), **Partial** (works with stated limits), **Unsupported**.
-"Evidence" names real tests in `tests/` (149 pass; see "Development").
+"Evidence" names real tests in `tests/` (154 pass; see "Development").
 
 | Feature | Status | Evidence |
 | --- | --- | --- |
@@ -153,7 +154,8 @@ Status uses only these words: **Implemented** (works, tested), **Partial** (work
 | Backdrops and stage | Implemented | `::test_backdrops_and_stage` |
 | Sounds (import/synthesize/edit/preview) | Implemented; mp3/ogg need ffmpeg; **microphone recording Unsupported** | `::test_sound_management_and_editing`, `::test_import_mp3_via_ffmpeg` |
 | Scratch library (search + add) | Partial: search verified live against the real catalogue; asset download verified only with a mocked network (this build environment cannot reach Scratch's asset CDN) | `::test_library_with_mock_network`; the live search was checked by hand during development (the automated suite needs no internet) |
-| Runtime control (flag/stop/run/step/state/variables/threads/events) | Implemented in simulated time | `test_runtime.py` (19 tests) |
+| Animation patterns (cycles, blink, jump, entrance/exit/path, dialogue, fade/wipe transitions, scene timeline) | Implemented; each pattern is verified by running the generated scripts | `::test_animation_cycle_blink_jump`, `::test_animation_move_entrance_exit_path`, `::test_animation_dialogue_transition_timeline`, `::test_fade_transition_covers_then_reveals` |
+| Runtime control (flag/stop/run/step/state/variables/threads/events) | Implemented in simulated time | `test_runtime.py` (23 tests) |
 | Real-time execution and audible audio | **Unsupported** (sound plays are logged and mixed into recorded video, not played) | - |
 | Input simulation (keys, mouse, drag, clicks, answers) | Implemented | `::test_keyboard_collision_variables_and_screenshot`, `::test_broadcast_jump_click_ask_clones_sounds` |
 | Screenshots / visual feedback (returned as MCP image content) | Implemented; the code area (block editor) cannot be pictured - use `script_manager`/`inspection_manager` text | `::test_keyboard_collision_*`, `test_mcp_server.py` (real image block over stdio) |
@@ -180,7 +182,7 @@ bubbles) that are now fixed and have regression tests.
 
 ## Honest limits
 
-* The tool descriptions are long (about 60 KB of schema text for 17 tools). Use `help` for exact schemas.
+* The tool descriptions are long (about 65 KB of schema text for 18 tools). Use `help` for exact schemas.
 * Time is simulated, not real: `run(seconds=5)` means 5 simulated seconds.
 * Drawing is vector-first. There is no freehand bitmap painting.
 * Block editor visuals (colours, layout of the code area) are not rendered; scripts are returned as text/JSON.
@@ -205,7 +207,7 @@ python tools/gen_tool_docs.py > docs/TOOLS.md
 
 Layout (`src/scratch_mcp/`): `server.py` (MCP wiring) · `registry.py` (action framework) · `store.py` (sessions, undo) ·
 `workspace.py` (sandbox, files, backups) · `schema.py`+`schema.json` · `engine.py` (block graph) · `textparse.py` / `render.py`
-(text syntax) · `vector.py` · `audio.py` / `sounds.py` · `library.py` · `analysis.py` · `groups/` (the 17 tools) ·
+(text syntax) · `vector.py` · `audio.py` / `sounds.py` · `library.py` · `analysis.py` · `groups/` (the 18 tools) ·
 `runtime/` (`browser.py`, `manager.py`, `harness.html`).
 
 ## Credits and licences

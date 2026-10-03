@@ -190,6 +190,16 @@ Replace the project's whole project.json with an edited version (validated first
 | `project_json`* | string\|object | the full project.json as text or an object. |
 | `project` | string |  |
 
+### project_manager.restore_backup
+
+Bring a backup back (see list_backups). Without as_name it replaces the project it was made from - the current file is backed up first, so the restore itself can be undone by restoring again.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `backup`* | string | path from list_backups, e.g. "backups/Game.20261003-063847.sb3". |
+| `as_name` | string | restore as a new project with this name instead. |
+| `overwrite` | boolean | required to replace an existing project when as_name names one. |
+
 ## sprite_manager
 
 Create and manage sprites and their properties (position, size, direction, rotation style, visibility, draggable, layer, volume, current costume). 'select' sets the default sprite for other tools. Clone creation/inspection happens at run time: see runtime_manager (create_clone, list_clones). Costumes: costume_manager. Sounds: sound_manager. Scripts: script_manager. The Stage is not a sprite - use backdrop_manager.
@@ -1959,6 +1969,115 @@ Load the project in the real Scratch VM and run the green flag for a moment: pro
 | `project` | string |  |
 | `run_seconds` | number |  |
 
+## animation_manager
+
+Generate common cartoon/animation scripts in one call: costume cycles (walk/run/idle), blinking, jumps, entrances/exits/paths, multi-character dialogue, scene transitions (fade/wipe) and a scene timeline on the Stage. 'on' says what starts the script: "flag" | "clicked" | {"key": "space"} | {"broadcast": "name"} | {"while_key": "right arrow"} (repeats while the key is held; for cycles). Everything is ordinary Scratch blocks you can inspect and edit afterwards. Animation timing is in seconds; Scratch runs at 30 frames/second.
+
+### animation_manager.cycle
+
+Loop through costumes (a walk, run, idle or any frame-by-frame animation), optionally moving a little each frame.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `costumes`* | [string] | costume names in order, e.g. ["walk1", "walk2"]. |
+| `delay` | number | seconds each frame is shown. |
+| `times` | integer | repeat this many times; omit to repeat forever. |
+| `on` | Any | what starts it. With {"while_key": "right arrow"} it plays only while the key is held. |
+| `move_x` | number | pixels to move per frame (negative = left). |
+| `move_y` | number |  |
+| `face` | integer | point in this direction first (90 = right, -90 = left). |
+| `rest_costume` | string | costume to show after a finite cycle ends. |
+| `sprite` | string |  |
+| `project` | string |  |
+
+### animation_manager.blink
+
+Random blinking: wait a random time, show the closed-eyes costume briefly, go back. Runs forever from the green flag. (If you also run a walk cycle on the same sprite, give the cycle only costumes that already have open eyes, or blink via a separate eyes sprite.)
+
+| parameter | type | description |
+| --- | --- | --- |
+| `open_costume`* | string |  |
+| `closed_costume`* | string |  |
+| `min_wait` | number |  |
+| `max_wait` | number |  |
+| `closed_time` | number |  |
+| `sprite` | string |  |
+| `project` | string |  |
+
+### animation_manager.jump
+
+A jump arc (up then down, frame by frame), with optional pose, landing pose and sound. By default triggered by the space key; a guard variable (created for you) stops double jumps.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `height` | number | pixels to rise. |
+| `seconds` | number | total time up + down. |
+| `on` | Any | trigger (default {"key": "space"}). |
+| `ground_y` | number | y to return to (default: the sprite's current y). |
+| `jump_costume` | string | costume shown while in the air. |
+| `land_costume` | string | costume to return to afterwards. |
+| `sound` | string | name of one of the sprite's sounds to play at take-off. |
+| `guard_variable` | string |  |
+| `sprite` | string |  |
+| `project` | string |  |
+
+### animation_manager.move
+
+Movement choreography. kind: 'path' (glide through `points`), 'entrance' (appear from off-screen `side` and glide to to_x/to_y), 'exit' (glide off-screen `side` then hide). With `costumes` the sprite also animates (a walk cycle) while it moves.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `kind` | string | path \| entrance \| exit. |
+| `points` | [[number]] | [[x,y], ...] for 'path'. |
+| `seconds_each` | number |  |
+| `side` | string | left \| right \| top \| bottom, for entrance/exit. |
+| `to_x` | number |  |
+| `to_y` | number |  |
+| `seconds` | number | duration for entrance/exit. |
+| `on` | Any |  |
+| `costumes` | [string] | optional frames to cycle while moving. |
+| `delay` | number |  |
+| `sprite` | string |  |
+| `project` | string |  |
+
+### animation_manager.dialogue
+
+A conversation between sprites. Each line is {"sprite": "Robo", "text": "Hello!", "seconds": 2, "costume": "happy"(optional), "sound": "name"(optional), "return_costume": optional}. Lines play one after another across sprites using broadcasts '<channel> 1', '<channel> 2', ... ('<channel> done' at the end - hook other scripts to it).
+
+| parameter | type | description |
+| --- | --- | --- |
+| `lines`* | [object] | the lines in order. |
+| `on` | Any | what starts the first line. |
+| `channel` | string | prefix for the broadcast names. |
+| `pause` | number | seconds between lines. |
+| `project` | string |  |
+
+### animation_manager.transition
+
+A scene transition. kind 'fade' (screen fades to a colour, backdrop changes, fades back) or 'wipe' (a colour sweeps across). Creates a full-screen cover sprite (default name 'Transition') if it doesn't exist. Default trigger: broadcast 'transition'. Broadcasts '<cover> midpoint' when the screen is fully covered, so scenes can swap sprites there.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `kind` | string | fade \| wipe. |
+| `on` | Any | trigger (default {"broadcast": "transition"}). |
+| `to_backdrop` | string | backdrop to switch to while covered. |
+| `seconds` | number | length of each half. |
+| `color` | string | cover colour. |
+| `cover_sprite` | string |  |
+| `project` | string |  |
+
+### animation_manager.timeline
+
+A Stage script that runs a sequence of scenes on a timer (no drift): for each scene it switches the backdrop (optional), broadcasts '<prefix> N' and '<prefix> <name>', and waits until the scene's end time. Sprites react with `when I receive`. A final '<prefix> end' marks the end.
+
+| parameter | type | description |
+| --- | --- | --- |
+| `scenes`* | [object] | [{"name": "intro", "seconds": 5, "backdrop": "city"(optional)}, ...]. |
+| `on` | Any | what starts the timeline (default green flag). |
+| `broadcast_prefix` | string | prefix for broadcast names. |
+| `stop_at_end` | boolean | stop all scripts when the last scene finishes. |
+| `project` | string |  |
+
 ## inspection_manager
 
 Read-only views of a project for planning edits. 'overview' = the whole structure in one call; 'component' = one part in detail (sprite, costumes, sounds, scripts, variables, lists, broadcasts, monitors, extensions, stage, meta); 'find_blocks' searches every script; 'block_graph' shows how blocks connect (parent/next/inputs); 'references' says what uses a variable/list/broadcast/costume/sound/sprite/custom block; 'json' returns raw project.json (optionally one part). Live run-time state: runtime_manager state / screenshot.
@@ -2271,4 +2390,4 @@ Download a SHARED project (project.json + every costume/sound) as a new local pr
 | `name` | string | local name (default: 'scratch-<id>'). |
 
 
-_17 tools, 206 actions._
+_18 tools, 214 actions._

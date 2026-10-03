@@ -544,3 +544,148 @@ def test_music_and_makey_makey_extensions_run(game):
     assert played["condition_met"] and 0.33 <= played["ran_seconds"] <= 0.6      # 0.5 beat note + 0.25 beat drum at 120 bpm = 0.375 s
     assert {v["name"]: v["value"] for v in variables["variables"]}["score"] in (77, "77")
     assert errors["errors"] == []
+
+
+# ---------------------------------------------------------------- animation_manager (generated scripts, verified by running them)
+
+@pytest.fixture
+def anim(ctx, runtime_ready):
+    c = lambda g, a, **k: run(ctx, g, a, **k)  # noqa: E731
+    c("project_manager", "create", name="anim", sprite_name="Placeholder", empty=True)
+    c("backdrop_manager", "add_stock", art="kitchen")
+    c("sprite_manager", "create", name="Robo", stock="robot", x=-100, y=-60, size=50)
+    c("sprite_manager", "create", name="Zorp", stock="alien", x=120, y=-60, size=50)
+    c("sound_manager", "add_preset", sprite="Robo", name="boing", preset="boing")
+    return ctx
+
+
+def test_animation_cycle_blink_jump(anim):
+    A, R, I = "animation_manager", "runtime_manager", "input_manager"
+    cyc = run(anim, A, "cycle", sprite="Robo", costumes=["idle", "wow"], delay=0.1, move_x=3, on={"while_key": "right arrow"}, face=90)
+    assert "if <key (right arrow v) pressed?>" in cyc["text"].replace("[right arrow v]", "(right arrow v)") or "right arrow" in cyc["text"]
+    run(anim, A, "blink", sprite="Zorp", open_costume="smug", closed_costume="happy", min_wait=0.3, max_wait=0.4, closed_time=0.15)
+    j = run(anim, A, "jump", sprite="Robo", height=60, seconds=0.5, sound="boing", jump_costume="happy", land_costume="idle")
+    assert j["guard_variable"] == "Robo jumping"
+    run(anim, "script_manager", "list_scripts", sprite="Robo")
+    out = arun(anim, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.2}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (I, "key_down", {"key": "right arrow", "then_run": 1.0}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (I, "release_all", {}),
+        (I, "key_press", {"key": "space", "hold_seconds": 0.05, "then_run": 0.2}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (I, "key_press", {"key": "space", "hold_seconds": 0.05, "then_run": 0.0}),       # a second press mid-air must be ignored
+        (R, "run", {"seconds": 0.7}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (R, "run", {"seconds": 2}),
+        (R, "events", {"type": "looks_switchcostumeto", "last": 200}),
+        (R, "events", {"type": "sound_play"}),
+    ])
+    before, walking, air, after, evs, boings = out[1], out[3], out[6], out[9], out[11], out[12]
+    assert walking["x"] - before["x"] > 15                                   # moved while the key was held
+    assert 25 < air["y"] + 60 < 62 and air["costume"] == "happy"             # in the air, jump pose
+    assert after["y"] == -60 and after["costume"] == "idle"                  # landed, back to idle
+    assert boings["total"] == 1                                              # guard variable stopped the double jump
+    blinks = [e for e in evs["events"] if e["sprite"] == "Zorp"]
+    assert sum(1 for e in blinks if e["args"]["COSTUME"] == "happy") >= 3    # blinked several times in ~3.5 s
+    assert {e["args"]["COSTUME"] for e in evs["events"] if e["sprite"] == "Robo"} >= {"idle", "wow"}
+    with pytest.raises(WorkspaceError, match="no costume"):
+        run(anim, A, "cycle", sprite="Robo", costumes=["idle", "missing"])
+    with pytest.raises(WorkspaceError, match="at least two"):
+        run(anim, A, "cycle", sprite="Robo", costumes=["idle"])
+    assert run(anim, "debug_manager", "check", include_info=False)["ok"]
+
+
+def test_animation_move_entrance_exit_path(anim):
+    A, R = "animation_manager", "runtime_manager"
+    run(anim, A, "move", sprite="Robo", kind="entrance", side="left", to_x=0, to_y=-60, seconds=1.0, costumes=["idle", "wow"], on={"broadcast": "enter"})
+    run(anim, A, "move", sprite="Zorp", kind="path", points=[[100, 50], [100, -60]], seconds_each=0.5, on={"broadcast": "enter"})
+    run(anim, A, "move", sprite="Robo", kind="exit", side="right", seconds=0.5, on={"broadcast": "leave"})
+    out = arun(anim, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.1}),
+        (R, "run", {"seconds": 0.1}),
+        ("script_manager", "list_scripts", {"sprite": "Robo"}),
+        (R, "set_sprite", {"sprite": "Robo", "x": 0, "y": -60}),   # reset position to prove the glide really moves it
+        (R, "state", {}),
+    ])
+    assert out[2]["scripts"], out[2]
+    # drive the broadcasts the way a timeline would, using the test runner (flag, then broadcast via a key script)
+    run(anim, "script_manager", "add_tree", sprite="Zorp", scripts=[{"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "e"}, "next": [
+        {"opcode": "event_broadcast", "inputs": {"BROADCAST_INPUT": "enter"}}]}, {"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "l"}, "next": [
+        {"opcode": "event_broadcast", "inputs": {"BROADCAST_INPUT": "leave"}}]}])
+    out = arun(anim, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.1}),
+        ("input_manager", "key_press", {"key": "e", "then_run": 0.0}),
+        (R, "run", {"seconds": 0.35}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (R, "run", {"seconds": 1.0}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+        (R, "sprite_state", {"sprite": "Zorp"}),
+        ("input_manager", "key_press", {"key": "l", "then_run": 0.8}),
+        (R, "sprite_state", {"sprite": "Robo"}),
+    ])
+    mid, arrived, zorp, gone = out[3], out[5], out[6], out[8]
+    assert -300 < mid["x"] < -20 and mid["visible"]                          # gliding in from off-screen
+    assert abs(arrived["x"]) < 1 and arrived["visible"]
+    assert abs(zorp["x"] - 100) < 1 and abs(zorp["y"] + 60) < 1               # followed its path
+    assert gone["visible"] is False and gone["x"] > 240                       # exited to the right and hid
+    with pytest.raises(WorkspaceError, match="to_x and to_y"):
+        run(anim, A, "move", sprite="Robo", kind="entrance")
+
+
+def test_animation_dialogue_transition_timeline(anim):
+    A, R = "animation_manager", "runtime_manager"
+    d = run(anim, A, "dialogue", lines=[
+        {"sprite": "Robo", "text": "Hi Zorp!", "seconds": 1, "costume": "happy", "return_costume": "idle"},
+        {"sprite": "Zorp", "text": "Bleep!", "seconds": 1.5},
+        {"sprite": "Robo", "text": "Bye!", "seconds": 1}], pause=0.1)
+    assert d["finished_broadcast"] == "dialogue done" and abs(d["duration_seconds"] - 3.8) < 0.01
+    tl = run(anim, A, "timeline", scenes=[{"name": "intro", "seconds": 1, "backdrop": "kitchen1"}, {"name": "later", "seconds": 1.5, "backdrop": "kitchen2"}],
+             broadcast_prefix="act")
+    assert tl["total_seconds"] == 2.5 and "act intro" in tl["broadcasts"]
+    t = run(anim, A, "transition", kind="fade", on={"broadcast": "act 2"}, to_backdrop="kitchen1", seconds=0.4)
+    assert t["midpoint_broadcast"] == "Transition midpoint"
+    out = arun(anim, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.5}),
+        (R, "state", {}),
+        (R, "run", {"seconds": 0.6}),                       # t = 1.1: the timeline has just started scene 2
+        (R, "state", {}),
+        (R, "run", {"seconds": 0.9}),                       # t = 2.0: the transition has swapped the backdrop back
+        (R, "state", {}),
+        (R, "run", {"seconds": 3}),
+        (R, "events", {"type": "looks_sayforsecs", "last": 20}),
+        (R, "events", {"type": "event_broadcast", "last": 50}),
+    ])
+    s1, s2, s3, says, bcasts = out[1], out[3], out[5], out[7], out[8]
+    stage = lambda st: next(x for x in st["targets"] if x["isStage"])  # noqa: E731
+    assert stage(s1)["costume"] == "kitchen1"
+    assert stage(s2)["costume"] == "kitchen2"                                    # timeline switched the backdrop at t=1
+    assert stage(s3)["costume"] == "kitchen1"                                    # then the fade's midpoint swapped it (to_backdrop)
+    assert [(e["sprite"], e["args"]["MESSAGE"]) for e in says["events"]] == [("Robo", "Hi Zorp!"), ("Zorp", "Bleep!"), ("Robo", "Bye!")]
+    times = [e["t"] for e in says["events"]]
+    assert times == sorted(times) and times[1] - times[0] == pytest.approx(1.1, abs=0.15) and times[2] - times[1] == pytest.approx(1.6, abs=0.15)
+    names = [e["args"].get("BROADCAST_INPUT") or e["args"].get("BROADCAST_OPTION") for e in bcasts["events"]]
+    assert "dialogue done" in names and "act end" in names and "act 2" in names and "Transition midpoint" in names
+
+
+def test_fade_transition_covers_then_reveals(anim):
+    A, R = "animation_manager", "runtime_manager"
+    run(anim, A, "transition", kind="fade", on={"broadcast": "go"}, to_backdrop="kitchen2", seconds=0.5)
+    run(anim, "script_manager", "add_tree", sprite="Robo", scripts=[{"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "t"}, "next": [
+        {"opcode": "event_broadcast", "inputs": {"BROADCAST_INPUT": "go"}}]}])
+    out = arun(anim, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.2}), (R, "state", {}),
+        ("input_manager", "key_press", {"key": "t", "then_run": 0.1}), (R, "state", {}),
+        (R, "run", {"seconds": 0.6}), (R, "state", {}),             # past the fade's midpoint (0.5 s) but not finished (1.0 s)
+        (R, "run", {"seconds": 1.2}), (R, "state", {}),
+        (R, "events", {"type": "event_broadcast", "last": 20}),
+    ])
+    def cover(st): return next(x for x in st["targets"] if x["name"] == "Transition")
+    assert cover(out[1])["visible"] is False
+    assert cover(out[3])["visible"] and cover(out[3])["effects"].get("ghost", 100) > 40         # starting to fade in
+    mid = cover(out[5])
+    assert next(x for x in out[5]["targets"] if x["isStage"])["costume"] == "kitchen2"           # swapped while covered
+    assert cover(out[7])["visible"] is False                                                    # revealed and hidden again
+    names = [e["args"].get("BROADCAST_INPUT") or e["args"].get("BROADCAST_OPTION") for e in out[8]["events"]]
+    assert "Transition midpoint" in names and mid
