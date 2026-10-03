@@ -2348,7 +2348,7 @@ Record the project as an MP4: reload it, press the green flag, step the real VM 
 
 | parameter | type | description |
 | --- | --- | --- |
-| `seconds` | number | length of the recording in simulated seconds (max 300). |
+| `seconds` | number | length of the recording in simulated seconds (max 900). |
 | `name` | string | output name (exports/<name>.mp4). |
 | `project` | string |  |
 | `fps` | integer | 15-60 (the project itself always runs at 30 frames/second; other values repeat/skip frames). |

@@ -210,14 +210,14 @@ async def video(ctx: Ctx, seconds: float = 10, name: str | None = None, project:
     """Record the project as an MP4: reload it, press the green flag, step the real VM frame by frame, capture the stage each frame (480x360), mix in the sounds the project started, encode with ffmpeg, then verify duration/resolution with ffprobe.
 
     Args:
-        seconds: length of the recording in simulated seconds (max 300).
+        seconds: length of the recording in simulated seconds (max 900).
         name: output name (exports/<name>.mp4).
         fps: 15-60 (the project itself always runs at 30 frames/second; other values repeat/skip frames).
         with_audio: mix in sound-effect starts (no Music-extension notes or speech).
         inputs: optional timed inputs while recording, e.g. [{"at": 2.5, "key": "space"}, {"at": 4, "click": [100, 50]}, {"at": 6, "answer": "Ada"}].
     """
-    if not 1 <= seconds <= 300:
-        raise WorkspaceError("seconds must be 1-300.")
+    if not 1 <= seconds <= 900:
+        raise WorkspaceError("seconds must be 1-900.")
     if not 15 <= fps <= 60:
         raise WorkspaceError("fps must be 15-60.")
     ffmpeg, ffprobe = shutil.which("ffmpeg"), shutil.which("ffprobe")
