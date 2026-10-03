@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scratch-mcp"
+version = "0.1.0"
+description = "Local MCP server that lets Claude Desktop read and edit Scratch 3 (.sb3) projects"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.2.0,<2"]  # FastMCP API (renamed in mcp 2.x)
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+scratch-mcp = "scratch_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scratch_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
