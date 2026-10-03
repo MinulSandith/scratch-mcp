@@ -290,3 +290,127 @@ def test_preview_and_bitmap_round_trip(pm):
     assert r2.images[0][0][:4] == b"\x89PNG"
     assert els["elements"][0]["type"] == "image"
     valid(pm)
+
+
+# ---- sounds, backdrops, assets, library ----------------------------------------------------------
+
+def test_sound_management_and_editing(pm):
+    call(pm, "sound_manager", "add_preset", sprite="Ball", name="boing", preset="boing")
+    call(pm, "sound_manager", "add_tone", sprite="Ball", name="beep", frequency=440, seconds=1, wave="square")
+    lst = call(pm, "sound_manager", "list", sprite="Ball")["sounds"]
+    assert [s["name"] for s in lst][-2:] == ["boing", "beep"] and lst[-1]["seconds"] == 1.0
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="trim", start=0.25, end=0.75)
+    assert call(pm, "sound_manager", "list", sprite="Ball")["sounds"][-1]["seconds"] == 0.5
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="reverse")
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="volume", factor=0.5)
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="echo", delay=0.1, decay=0.4)
+    out = call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="faster", factor=2, save_as="beep fast")
+    assert out["sound"] == "beep fast" and out["seconds"] < out["was_seconds"]
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="fade_out", seconds=0.1)
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="robot")
+    call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="normalize")
+    call(pm, "sound_manager", "copy_segment", sprite="Ball", sound="beep", start=0, end=0.1)
+    before = call(pm, "sound_manager", "list", sprite="Ball")["sounds"][-2]["seconds"]
+    call(pm, "sound_manager", "paste_segment", sprite="Ball", sound="beep", at=0.2)
+    assert call(pm, "sound_manager", "list", sprite="Ball")["sounds"][-2]["seconds"] > before
+    with pytest.raises(WorkspaceError, match="Invalid time range"):
+        call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="trim", start=5, end=6)
+    with pytest.raises(WorkspaceError, match="Unknown operation"):
+        call(pm, "sound_manager", "edit", sprite="Ball", sound="beep", operation="wobble")
+    call(pm, "sound_manager", "rename", sprite="Ball", sound="beep", new_name="tone")
+    call(pm, "sound_manager", "duplicate", sprite="Ball", sound="tone")
+    call(pm, "sound_manager", "delete", sprite="Ball", sound="tone2")
+    pv = call(pm, "sound_manager", "preview", sprite="Ball", sound="boing")
+    assert pv.audio[0][0][:4] == b"RIFF" and pv.text["peak"] > 0.1 and not pv.text["silent"]
+    with pytest.raises(WorkspaceError, match="Only WAV"):
+        import unittest.mock as m
+        with m.patch("shutil.which", return_value=None):
+            call(pm, "sound_manager", "import_sound", sprite="Ball", name="x", data_base64=base64.b64encode(b"ID3....").decode())
+    valid(pm)
+
+
+def test_sound_rename_updates_menus(pm):
+    call(pm, "script_manager", "add_text", sprite="Cat", script="when flag clicked\nplay sound (Meow v) until done")
+    call(pm, "sound_manager", "rename", sprite="Cat", sound="Meow", new_name="Purr")
+    texts = " ".join(s["text"] for s in call(pm, "script_manager", "list_scripts", sprite="Cat")["scripts"])
+    assert "(Purr v)" in texts
+
+
+def test_backdrops_and_stage(pm):
+    call(pm, "backdrop_manager", "add_stock", art="kitchen")
+    call(pm, "backdrop_manager", "add_blank", name="sky", background="#87ceeb")
+    names = [b["name"] for b in call(pm, "backdrop_manager", "list")["costumes"]]
+    assert names[-3:] == ["kitchen1", "kitchen2", "sky"]
+    call(pm, "costume_manager", "draw", sprite="Stage", costume="sky", shape="circle", cx=400, cy=60, r=30, fill="#ffd34d")
+    call(pm, "backdrop_manager", "set_initial", backdrop="sky")
+    call(pm, "backdrop_manager", "rename", backdrop="sky", new_name="day")
+    call(pm, "backdrop_manager", "reorder", backdrop="day", position=1)
+    assert call(pm, "backdrop_manager", "list")["costumes"][0]["name"] == "day"
+    call(pm, "backdrop_manager", "stage_set", tempo=90, volume=50)
+    assert call(pm, "backdrop_manager", "stage_get")["tempo"] == 90
+    with pytest.raises(WorkspaceError):
+        call(pm, "backdrop_manager", "stage_set", tempo=5)
+    call(pm, "backdrop_manager", "delete", backdrop="kitchen2")
+    valid(pm)
+
+
+def test_assets_list_and_prune(pm):
+    a = call(pm, "asset_manager", "list")
+    assert a["unused"] == [] and a["missing"] == []
+    call(pm, "costume_manager", "add_blank", sprite="Ball", name="tmp")
+    n_before = len(call(pm, "asset_manager", "list")["files"])
+    call(pm, "costume_manager", "delete", sprite="Ball", costume="tmp")
+    assert len(call(pm, "asset_manager", "list")["files"]) == n_before - 1  # pruned automatically on delete
+    assert call(pm, "asset_manager", "prune")["removed"] == []
+
+
+def test_library_with_mock_network(pm, tmp_path, monkeypatch):
+    import io
+
+    from scratch_mcp.library import Library
+
+    monkeypatch.setenv("SCRATCH_MCP_CACHE", str(tmp_path / "cache"))
+    wav = __import__("scratch_mcp.sounds", fromlist=["x"]).render_preset("pop")
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="9" fill="red"/></svg>'
+    import hashlib
+
+    wav_md5, svg_md5 = hashlib.md5(wav).hexdigest(), hashlib.md5(svg).hexdigest()
+    meta = {
+        "sounds": [{"name": "Pop", "md5ext": wav_md5 + ".wav", "dataFormat": "wav", "rate": 22050, "sampleCount": 3000, "tags": ["effects"]}],
+        "costumes": [{"name": "Dot", "md5ext": svg_md5 + ".svg", "tags": ["shapes"], "rotationCenterX": 10, "rotationCenterY": 10}],
+        "backdrops": [{"name": "Sky", "md5ext": svg_md5 + ".svg", "tags": ["outdoors"]}],
+        "sprites": [{"name": "Blob", "tags": ["animals"], "isStage": False, "variables": {}, "lists": {}, "broadcasts": {}, "blocks": {},
+                     "comments": {}, "currentCostume": 0, "costumes": [{"name": "dot", "assetId": svg_md5, "md5ext": svg_md5 + ".svg",
+                     "dataFormat": "svg", "bitmapResolution": 1, "rotationCenterX": 10, "rotationCenterY": 10}],
+                     "sounds": [{"name": "pop", "assetId": wav_md5, "md5ext": wav_md5 + ".wav", "dataFormat": "wav", "rate": 22050, "sampleCount": 3000}],
+                     "volume": 100, "visible": True, "x": 0, "y": 0, "size": 100, "direction": 90, "draggable": False, "rotationStyle": "all around"}],
+    }
+    calls = []
+
+    def fake(url: str) -> bytes:
+        calls.append(url)
+        for k, v in meta.items():
+            if url.endswith(f"/{k}.json"):
+                return json.dumps(v).encode()
+        if url.endswith(wav_md5 + ".wav/get/"):
+            return wav
+        if url.endswith(svg_md5 + ".svg/get/"):
+            return svg
+        raise AssertionError(url)
+
+    pm.library = Library(fake)
+    assert call(pm, "asset_manager", "library_search", kind="sounds", query="effects")["results"][0]["name"] == "Pop"
+    assert call(pm, "asset_manager", "library_search", kind="sprites", tag="animals")["results"][0]["name"] == "Blob"
+    call(pm, "asset_manager", "library_add", kind="sounds", name="pop", sprite="Ball")
+    call(pm, "asset_manager", "library_add", kind="costumes", name="Dot", sprite="Ball")
+    call(pm, "asset_manager", "library_add", kind="backdrops", name="Sky")
+    r = call(pm, "asset_manager", "library_add", kind="sprites", name="Blob")
+    assert r["created_sprite"] == "Blob" and r["costumes"] == 1
+    valid(pm)
+    n = len(calls)
+    call(pm, "asset_manager", "library_add", kind="sounds", name="Pop", sprite="Ball", new_name="Pop2")
+    assert len(calls) == n  # served from the cache
+    with pytest.raises(WorkspaceError, match="No library sound"):
+        call(pm, "asset_manager", "library_add", kind="sounds", name="Nope", sprite="Ball")
+    with pytest.raises(WorkspaceError, match="kind must be"):
+        call(pm, "asset_manager", "library_search", kind="gifs")

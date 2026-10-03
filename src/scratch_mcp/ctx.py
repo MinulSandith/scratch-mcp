@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from .library import Library
 from .store import ProjectStore, Session
 from .workspace import Workspace, WorkspaceError
 
@@ -15,6 +16,8 @@ class Ctx:
         self.store = ProjectStore(self.ws)
         self._runtime: Any = None
         self._browser: Any = None
+        self.library = Library()
+        self.audio_clipboard: bytes | None = None
         self.clipboard: list[str] = []  # copied vector elements (costume_manager copy/paste)
 
     @property

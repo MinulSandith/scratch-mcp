@@ -371,7 +371,7 @@ class ScratchTools:
         return self._done(*self._edit(project, fn))
 
 
-GROUP_MODULES = ["project", "scripts", "blocks", "variables", "sprites", "costumes"]  # modules under scratch_mcp.groups, imported to register their actions
+GROUP_MODULES = ["project", "scripts", "blocks", "variables", "sprites", "costumes", "sounds", "backdrops", "assets"]  # modules under scratch_mcp.groups, imported to register their actions
 
 
 def register_groups(mcp: FastMCP, ctx: Ctx) -> None:
