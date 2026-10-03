@@ -1,0 +1,4661 @@
+{
+ "generated_from": {
+  "scratch-blocks": "npm scratch-blocks",
+  "toolbox": "scratch-gui make-toolbox-xml.js",
+  "extensions": "scratch-vm extension getInfo()"
+ },
+ "blocks": {
+  "argument_editor_boolean": {
+   "category": "primitive",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {
+    "TEXT": {
+     "type": "input_removable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "argument_editor_string_number": {
+   "category": "primitive",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "TEXT": {
+     "type": "input_removable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "argument_reporter_boolean": {
+   "category": "myblocks",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {
+    "VALUE": {
+     "type": "text"
+    }
+   }
+  },
+  "argument_reporter_string_number": {
+   "category": "myblocks",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "VALUE": {
+     "type": "text"
+    }
+   }
+  },
+  "boost_getMotorPosition": {
+   "category": "boost",
+   "shape": "reporter",
+   "inputs": {
+    "MOTOR_REPORTER_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_REPORTER_ID",
+     "menu": "MOTOR_REPORTER_ID",
+     "default": "A"
+    }
+   },
+   "fields": {},
+   "text": "motor [MOTOR_REPORTER_ID] position",
+   "ext": "boost"
+  },
+  "boost_getTiltAngle": {
+   "category": "boost",
+   "shape": "reporter",
+   "inputs": {
+    "TILT_DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_TILT_DIRECTION",
+     "menu": "TILT_DIRECTION",
+     "default": "up"
+    }
+   },
+   "fields": {},
+   "text": "tilt angle [TILT_DIRECTION]",
+   "ext": "boost"
+  },
+  "boost_menu_COLOR": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "COLOR": {
+     "type": "dropdown",
+     "options": [
+      "red",
+      "blue",
+      "green",
+      "yellow",
+      "white",
+      "black",
+      "any"
+     ]
+    }
+   }
+  },
+  "boost_menu_MOTOR_DIRECTION": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "MOTOR_DIRECTION": {
+     "type": "dropdown",
+     "options": [
+      "this way",
+      "that way",
+      "reverse"
+     ]
+    }
+   }
+  },
+  "boost_menu_MOTOR_ID": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "MOTOR_ID": {
+     "type": "dropdown",
+     "options": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "AB",
+      "ABCD"
+     ]
+    }
+   }
+  },
+  "boost_menu_MOTOR_REPORTER_ID": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "MOTOR_REPORTER_ID": {
+     "type": "dropdown",
+     "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+     ]
+    }
+   }
+  },
+  "boost_menu_TILT_DIRECTION": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "TILT_DIRECTION": {
+     "type": "dropdown",
+     "options": [
+      "up",
+      "down",
+      "left",
+      "right"
+     ]
+    }
+   }
+  },
+  "boost_menu_TILT_DIRECTION_ANY": {
+   "category": "boost",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "boost",
+   "fields": {
+    "TILT_DIRECTION_ANY": {
+     "type": "dropdown",
+     "options": [
+      "up",
+      "down",
+      "left",
+      "right",
+      "any"
+     ]
+    }
+   }
+  },
+  "boost_motorOff": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "A"
+    }
+   },
+   "fields": {},
+   "text": "turn motor [MOTOR_ID] off",
+   "ext": "boost"
+  },
+  "boost_motorOn": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "A"
+    }
+   },
+   "fields": {},
+   "text": "turn motor [MOTOR_ID] on",
+   "ext": "boost"
+  },
+  "boost_motorOnFor": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "A"
+    },
+    "DURATION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "turn motor [MOTOR_ID] for [DURATION] seconds",
+   "ext": "boost"
+  },
+  "boost_motorOnForRotation": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "A"
+    },
+    "ROTATION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "turn motor [MOTOR_ID] for [ROTATION] rotations",
+   "ext": "boost"
+  },
+  "boost_seeingColor": {
+   "category": "boost",
+   "shape": "boolean",
+   "inputs": {
+    "COLOR": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_COLOR",
+     "menu": "COLOR",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "seeing [COLOR] brick?",
+   "ext": "boost"
+  },
+  "boost_setLightHue": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "HUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "set light color to [HUE]",
+   "ext": "boost"
+  },
+  "boost_setMotorDirection": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "A"
+    },
+    "MOTOR_DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_DIRECTION",
+     "menu": "MOTOR_DIRECTION",
+     "default": "this way"
+    }
+   },
+   "fields": {},
+   "text": "set motor [MOTOR_ID] direction [MOTOR_DIRECTION]",
+   "ext": "boost"
+  },
+  "boost_setMotorPower": {
+   "category": "boost",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "ABCD"
+    },
+    "POWER": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "text": "set motor [MOTOR_ID] speed to [POWER] %",
+   "ext": "boost"
+  },
+  "boost_whenColor": {
+   "category": "boost",
+   "shape": "hat",
+   "inputs": {
+    "COLOR": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_COLOR",
+     "menu": "COLOR",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "when [COLOR] brick seen",
+   "ext": "boost"
+  },
+  "boost_whenTilted": {
+   "category": "boost",
+   "shape": "hat",
+   "inputs": {
+    "TILT_DIRECTION_ANY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "boost_menu_TILT_DIRECTION_ANY",
+     "menu": "TILT_DIRECTION_ANY",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "when tilted [TILT_DIRECTION_ANY]",
+   "ext": "boost"
+  },
+  "colour_picker": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "COLOUR": {
+     "type": "text"
+    }
+   }
+  },
+  "control_all_at_once": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "control_clear_counter": {
+   "category": "control",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "control_create_clone_of": {
+   "category": "control",
+   "shape": "statement",
+   "inputs": {
+    "CLONE_OPTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "control_create_clone_of_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_create_clone_of_menu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "CLONE_OPTION": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_myself_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "control_delete_this_clone": {
+   "category": "control",
+   "shape": "cap",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_for_each": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_whole_number",
+     "default": "10"
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "control_forever": {
+   "category": "control",
+   "shape": "cap",
+   "inputs": {
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_get_counter": {
+   "category": "control",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "control_if": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "CONDITION": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_if_else": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "CONDITION": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    },
+    "SUBSTACK2": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_incr_counter": {
+   "category": "control",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "control_repeat": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "TIMES": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_whole_number",
+     "default": "10"
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_repeat_until": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "CONDITION": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_start_as_clone": {
+   "category": "control",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_stop": {
+   "category": "control",
+   "shape": "cap",
+   "inputs": {},
+   "fields": {
+    "STOP_OPTION": {
+     "type": "dropdown",
+     "options": [
+      "all",
+      "this script",
+      "other scripts in sprite"
+     ]
+    }
+   },
+   "in_toolbox": true,
+   "mutation": {
+    "hasnext": "false"
+   }
+  },
+  "control_wait": {
+   "category": "control",
+   "shape": "statement",
+   "inputs": {
+    "DURATION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_positive_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_wait_until": {
+   "category": "control",
+   "shape": "statement",
+   "inputs": {
+    "CONDITION": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "control_while": {
+   "category": "control",
+   "shape": "c",
+   "inputs": {
+    "CONDITION": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "SUBSTACK": {
+     "type": "statement"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "data_addtolist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {
+    "ITEM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "thing"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_changevariableby": {
+   "category": "variables",
+   "shape": "statement",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_deletealloflist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_deleteoflist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {
+    "INDEX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_integer",
+     "default": "1"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_hidelist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_hidevariable": {
+   "category": "variables",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_insertatlist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {
+    "ITEM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "thing"
+    },
+    "INDEX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_integer",
+     "default": "1"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_itemnumoflist": {
+   "category": "lists",
+   "shape": "reporter",
+   "inputs": {
+    "ITEM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "thing"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_itemoflist": {
+   "category": "lists",
+   "shape": "reporter",
+   "inputs": {
+    "INDEX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_integer",
+     "default": "1"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_lengthoflist": {
+   "category": "lists",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_listcontainsitem": {
+   "category": "lists",
+   "shape": "boolean",
+   "inputs": {
+    "ITEM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "thing"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_listcontents": {
+   "category": "lists",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_listindexall": {
+   "category": "primitive",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "INDEX": {
+     "type": "numberdropdown"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_listindexrandom": {
+   "category": "primitive",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "INDEX": {
+     "type": "numberdropdown"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_replaceitemoflist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {
+    "INDEX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_integer",
+     "default": "1"
+    },
+    "ITEM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "thing"
+    }
+   },
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_setvariableto": {
+   "category": "variables",
+   "shape": "statement",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "0"
+    }
+   },
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_showlist": {
+   "category": "lists",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "LIST": {
+     "type": "list"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_showvariable": {
+   "category": "variables",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "data_variable": {
+   "category": "variables",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "VARIABLE": {
+     "type": "variable"
+    }
+   },
+   "in_toolbox": false
+  },
+  "ev3_beep": {
+   "category": "ev3",
+   "shape": "statement",
+   "inputs": {
+    "NOTE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "note",
+     "default": "60"
+    },
+    "TIME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.5"
+    }
+   },
+   "fields": {},
+   "text": "beep note [NOTE] for [TIME] secs",
+   "ext": "ev3"
+  },
+  "ev3_buttonPressed": {
+   "category": "ev3",
+   "shape": "boolean",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_sensorPorts",
+     "menu": "sensorPorts",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "text": "button [PORT] pressed?",
+   "ext": "ev3"
+  },
+  "ev3_getBrightness": {
+   "category": "ev3",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "brightness",
+   "ext": "ev3"
+  },
+  "ev3_getDistance": {
+   "category": "ev3",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "distance",
+   "ext": "ev3"
+  },
+  "ev3_getMotorPosition": {
+   "category": "ev3",
+   "shape": "reporter",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_motorPorts",
+     "menu": "motorPorts",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "text": "motor [PORT] position",
+   "ext": "ev3"
+  },
+  "ev3_menu_motorPorts": {
+   "category": "ev3",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "ev3",
+   "fields": {
+    "motorPorts": {
+     "type": "dropdown",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3"
+     ]
+    }
+   }
+  },
+  "ev3_menu_sensorPorts": {
+   "category": "ev3",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "ev3",
+   "fields": {
+    "sensorPorts": {
+     "type": "dropdown",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3"
+     ]
+    }
+   }
+  },
+  "ev3_motorSetPower": {
+   "category": "ev3",
+   "shape": "statement",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_motorPorts",
+     "menu": "motorPorts",
+     "default": "0"
+    },
+    "POWER": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "text": "motor [PORT] set power [POWER] %",
+   "ext": "ev3"
+  },
+  "ev3_motorTurnClockwise": {
+   "category": "ev3",
+   "shape": "statement",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_motorPorts",
+     "menu": "motorPorts",
+     "default": "0"
+    },
+    "TIME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "motor [PORT] turn this way for [TIME] seconds",
+   "ext": "ev3"
+  },
+  "ev3_motorTurnCounterClockwise": {
+   "category": "ev3",
+   "shape": "statement",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_motorPorts",
+     "menu": "motorPorts",
+     "default": "0"
+    },
+    "TIME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "motor [PORT] turn that way for [TIME] seconds",
+   "ext": "ev3"
+  },
+  "ev3_whenBrightnessLessThan": {
+   "category": "ev3",
+   "shape": "hat",
+   "inputs": {
+    "DISTANCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "when brightness < [DISTANCE]",
+   "ext": "ev3"
+  },
+  "ev3_whenButtonPressed": {
+   "category": "ev3",
+   "shape": "hat",
+   "inputs": {
+    "PORT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "ev3_menu_sensorPorts",
+     "menu": "sensorPorts",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "text": "when button [PORT] pressed",
+   "ext": "ev3"
+  },
+  "ev3_whenDistanceLessThan": {
+   "category": "ev3",
+   "shape": "hat",
+   "inputs": {
+    "DISTANCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "5"
+    }
+   },
+   "fields": {},
+   "text": "when distance < [DISTANCE]",
+   "ext": "ev3"
+  },
+  "event_broadcast": {
+   "category": "events",
+   "shape": "statement",
+   "inputs": {
+    "BROADCAST_INPUT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "event_broadcast_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "event_broadcast_menu": {
+   "category": "events",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "BROADCAST_OPTION": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "broadcasts"
+    }
+   },
+   "in_toolbox": false
+  },
+  "event_broadcastandwait": {
+   "category": "events",
+   "shape": "statement",
+   "inputs": {
+    "BROADCAST_INPUT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "event_broadcast_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "event_touchingobjectmenu": {
+   "category": "events",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "TOUCHINGOBJECTMENU": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_mouse_+_edge_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "event_whenbackdropswitchesto": {
+   "category": null,
+   "shape": "hat",
+   "inputs": {},
+   "fields": {
+    "BACKDROP": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "backdrops"
+    }
+   },
+   "in_toolbox": true
+  },
+  "event_whenbroadcastreceived": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {
+    "BROADCAST_OPTION": {
+     "type": "broadcast"
+    }
+   },
+   "in_toolbox": true
+  },
+  "event_whenflagclicked": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "event_whengreaterthan": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {
+    "WHENGREATERTHANMENU": {
+     "type": "dropdown",
+     "options": [
+      "LOUDNESS",
+      "TIMER"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "event_whenkeypressed": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {
+    "KEY_OPTION": {
+     "type": "dropdown",
+     "options": [
+      "space",
+      "up arrow",
+      "down arrow",
+      "right arrow",
+      "left arrow",
+      "any",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "event_whenstageclicked": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "event_whenthisspriteclicked": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "event_whentouchingobject": {
+   "category": "events",
+   "shape": "hat",
+   "inputs": {
+    "TOUCHINGOBJECTMENU": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "event_touchingobjectmenu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "gdxfor_getAcceleration": {
+   "category": "gdxfor",
+   "shape": "reporter",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_axisOptions",
+     "menu": "axisOptions",
+     "default": "x"
+    }
+   },
+   "fields": {},
+   "text": "acceleration [DIRECTION]",
+   "ext": "gdxfor"
+  },
+  "gdxfor_getForce": {
+   "category": "gdxfor",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "force",
+   "ext": "gdxfor"
+  },
+  "gdxfor_getSpinSpeed": {
+   "category": "gdxfor",
+   "shape": "reporter",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_axisOptions",
+     "menu": "axisOptions",
+     "default": "z"
+    }
+   },
+   "fields": {},
+   "text": "spin speed [DIRECTION]",
+   "ext": "gdxfor"
+  },
+  "gdxfor_getTilt": {
+   "category": "gdxfor",
+   "shape": "reporter",
+   "inputs": {
+    "TILT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_tiltOptions",
+     "menu": "tiltOptions",
+     "default": "front"
+    }
+   },
+   "fields": {},
+   "text": "tilt angle [TILT]",
+   "ext": "gdxfor"
+  },
+  "gdxfor_isFreeFalling": {
+   "category": "gdxfor",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {},
+   "text": "falling?",
+   "ext": "gdxfor"
+  },
+  "gdxfor_isTilted": {
+   "category": "gdxfor",
+   "shape": "boolean",
+   "inputs": {
+    "TILT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_tiltAnyOptions",
+     "menu": "tiltAnyOptions",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "tilted [TILT]?",
+   "ext": "gdxfor"
+  },
+  "gdxfor_menu_axisOptions": {
+   "category": "gdxfor",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "gdxfor",
+   "fields": {
+    "axisOptions": {
+     "type": "dropdown",
+     "options": [
+      "x",
+      "y",
+      "z"
+     ]
+    }
+   }
+  },
+  "gdxfor_menu_gestureOptions": {
+   "category": "gdxfor",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "gdxfor",
+   "fields": {
+    "gestureOptions": {
+     "type": "dropdown",
+     "options": [
+      "shaken",
+      "started falling",
+      "turned face up",
+      "turned face down"
+     ]
+    }
+   }
+  },
+  "gdxfor_menu_pushPullOptions": {
+   "category": "gdxfor",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "gdxfor",
+   "fields": {
+    "pushPullOptions": {
+     "type": "dropdown",
+     "options": [
+      "pushed",
+      "pulled"
+     ]
+    }
+   }
+  },
+  "gdxfor_menu_tiltAnyOptions": {
+   "category": "gdxfor",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "gdxfor",
+   "fields": {
+    "tiltAnyOptions": {
+     "type": "dropdown",
+     "options": [
+      "front",
+      "back",
+      "left",
+      "right",
+      "any"
+     ]
+    }
+   }
+  },
+  "gdxfor_menu_tiltOptions": {
+   "category": "gdxfor",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "gdxfor",
+   "fields": {
+    "tiltOptions": {
+     "type": "dropdown",
+     "options": [
+      "front",
+      "back",
+      "left",
+      "right"
+     ]
+    }
+   }
+  },
+  "gdxfor_whenForcePushedOrPulled": {
+   "category": "gdxfor",
+   "shape": "hat",
+   "inputs": {
+    "PUSH_PULL": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_pushPullOptions",
+     "menu": "pushPullOptions",
+     "default": "pushed"
+    }
+   },
+   "fields": {},
+   "text": "when force sensor [PUSH_PULL]",
+   "ext": "gdxfor"
+  },
+  "gdxfor_whenGesture": {
+   "category": "gdxfor",
+   "shape": "hat",
+   "inputs": {
+    "GESTURE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_gestureOptions",
+     "menu": "gestureOptions",
+     "default": "shaken"
+    }
+   },
+   "fields": {},
+   "text": "when [GESTURE]",
+   "ext": "gdxfor"
+  },
+  "gdxfor_whenTilted": {
+   "category": "gdxfor",
+   "shape": "hat",
+   "inputs": {
+    "TILT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "gdxfor_menu_tiltAnyOptions",
+     "menu": "tiltAnyOptions",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "when tilted [TILT]",
+   "ext": "gdxfor"
+  },
+  "looks_backdropnumbername": {
+   "category": "looks",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "NUMBER_NAME": {
+     "type": "dropdown",
+     "options": [
+      "number",
+      "name"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_backdrops": {
+   "category": "menu",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "BACKDROP": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "backdrops"
+    }
+   },
+   "in_toolbox": false
+  },
+  "looks_changeeffectby": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "CHANGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "25"
+    }
+   },
+   "fields": {
+    "EFFECT": {
+     "type": "dropdown",
+     "options": [
+      "COLOR",
+      "FISHEYE",
+      "WHIRL",
+      "PIXELATE",
+      "MOSAIC",
+      "BRIGHTNESS",
+      "GHOST"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_changesizeby": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "CHANGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_changestretchby": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "CHANGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "looks_cleargraphiceffects": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_costume": {
+   "category": "menu",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "COSTUME": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "costumes"
+    }
+   },
+   "in_toolbox": false
+  },
+  "looks_costumenumbername": {
+   "category": "looks",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "NUMBER_NAME": {
+     "type": "dropdown",
+     "options": [
+      "number",
+      "name"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_goforwardbackwardlayers": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "NUM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_integer",
+     "default": "1"
+    }
+   },
+   "fields": {
+    "FORWARD_BACKWARD": {
+     "type": "dropdown",
+     "options": [
+      "forward",
+      "backward"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_gotofrontback": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "FRONT_BACK": {
+     "type": "dropdown",
+     "options": [
+      "front",
+      "back"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_hide": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_hideallsprites": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "looks_nextbackdrop": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_nextcostume": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_say": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "MESSAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "Hello!"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_sayforsecs": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "MESSAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "Hello!"
+    },
+    "SECS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "2"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_seteffectto": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    }
+   },
+   "fields": {
+    "EFFECT": {
+     "type": "dropdown",
+     "options": [
+      "COLOR",
+      "FISHEYE",
+      "WHIRL",
+      "PIXELATE",
+      "MOSAIC",
+      "BRIGHTNESS",
+      "GHOST"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "looks_setsizeto": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "SIZE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_setstretchto": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "STRETCH": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "looks_show": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_size": {
+   "category": "looks",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_switchbackdropto": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "BACKDROP": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "looks_backdrops"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_switchbackdroptoandwait": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "BACKDROP": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "looks_backdrops"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_switchcostumeto": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "COSTUME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "looks_costume"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_think": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "MESSAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "Hmm..."
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "looks_thinkforsecs": {
+   "category": "looks",
+   "shape": "statement",
+   "inputs": {
+    "MESSAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "Hmm..."
+    },
+    "SECS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "2"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "makeymakey_menu_KEY": {
+   "category": "makeymakey",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "makeymakey",
+   "fields": {
+    "KEY": {
+     "type": "dropdown",
+     "options": [
+      "SPACE",
+      "UP",
+      "DOWN",
+      "RIGHT",
+      "LEFT",
+      "w",
+      "a",
+      "s",
+      "d",
+      "f",
+      "g"
+     ]
+    }
+   }
+  },
+  "makeymakey_menu_SEQUENCE": {
+   "category": "makeymakey",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "makeymakey",
+   "fields": {
+    "SEQUENCE": {
+     "type": "dropdown",
+     "options": [
+      "LEFT UP RIGHT",
+      "RIGHT UP LEFT",
+      "LEFT RIGHT",
+      "RIGHT LEFT",
+      "UP DOWN",
+      "DOWN UP",
+      "UP RIGHT DOWN LEFT",
+      "UP LEFT DOWN RIGHT",
+      "UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT"
+     ]
+    }
+   }
+  },
+  "makeymakey_whenCodePressed": {
+   "category": "makeymakey",
+   "shape": "hat",
+   "inputs": {
+    "SEQUENCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "makeymakey_menu_SEQUENCE",
+     "menu": "SEQUENCE",
+     "default": "LEFT UP RIGHT"
+    }
+   },
+   "fields": {},
+   "text": "when [SEQUENCE] pressed in order",
+   "ext": "makeymakey"
+  },
+  "makeymakey_whenMakeyKeyPressed": {
+   "category": "makeymakey",
+   "shape": "hat",
+   "inputs": {
+    "KEY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "makeymakey_menu_KEY",
+     "menu": "KEY",
+     "default": "SPACE"
+    }
+   },
+   "fields": {},
+   "text": "when [KEY] key pressed",
+   "ext": "makeymakey"
+  },
+  "math_angle": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NUM": {
+     "type": "text"
+    }
+   }
+  },
+  "math_integer": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NUM": {
+     "type": "text"
+    }
+   }
+  },
+  "math_number": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NUM": {
+     "type": "text"
+    }
+   }
+  },
+  "math_positive_number": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NUM": {
+     "type": "text"
+    }
+   }
+  },
+  "math_whole_number": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NUM": {
+     "type": "text"
+    }
+   }
+  },
+  "matrix": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "MATRIX": {
+     "type": "text"
+    }
+   }
+  },
+  "microbit_displayClear": {
+   "category": "microbit",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "text": "clear display",
+   "ext": "microbit"
+  },
+  "microbit_displaySymbol": {
+   "category": "microbit",
+   "shape": "statement",
+   "inputs": {
+    "MATRIX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "matrix",
+     "default": "0101010101100010101000100"
+    }
+   },
+   "fields": {},
+   "text": "display [MATRIX]",
+   "ext": "microbit"
+  },
+  "microbit_displayText": {
+   "category": "microbit",
+   "shape": "statement",
+   "inputs": {
+    "TEXT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "Hello!"
+    }
+   },
+   "fields": {},
+   "text": "display text [TEXT]",
+   "ext": "microbit"
+  },
+  "microbit_getTiltAngle": {
+   "category": "microbit",
+   "shape": "reporter",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_tiltDirection",
+     "menu": "tiltDirection",
+     "default": "front"
+    }
+   },
+   "fields": {},
+   "text": "tilt angle [DIRECTION]",
+   "ext": "microbit"
+  },
+  "microbit_isButtonPressed": {
+   "category": "microbit",
+   "shape": "boolean",
+   "inputs": {
+    "BTN": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_buttons",
+     "menu": "buttons",
+     "default": "A"
+    }
+   },
+   "fields": {},
+   "text": "[BTN] button pressed?",
+   "ext": "microbit"
+  },
+  "microbit_isTilted": {
+   "category": "microbit",
+   "shape": "boolean",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_tiltDirectionAny",
+     "menu": "tiltDirectionAny",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "tilted [DIRECTION]?",
+   "ext": "microbit"
+  },
+  "microbit_menu_buttons": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "buttons": {
+     "type": "dropdown",
+     "options": [
+      "A",
+      "B",
+      "any"
+     ]
+    }
+   }
+  },
+  "microbit_menu_gestures": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "gestures": {
+     "type": "dropdown",
+     "options": [
+      "moved",
+      "shaken",
+      "jumped"
+     ]
+    }
+   }
+  },
+  "microbit_menu_pinState": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "pinState": {
+     "type": "dropdown",
+     "options": [
+      "on",
+      "off"
+     ]
+    }
+   }
+  },
+  "microbit_menu_tiltDirection": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "tiltDirection": {
+     "type": "dropdown",
+     "options": [
+      "front",
+      "back",
+      "left",
+      "right"
+     ]
+    }
+   }
+  },
+  "microbit_menu_tiltDirectionAny": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "tiltDirectionAny": {
+     "type": "dropdown",
+     "options": [
+      "front",
+      "back",
+      "left",
+      "right",
+      "any"
+     ]
+    }
+   }
+  },
+  "microbit_menu_touchPins": {
+   "category": "microbit",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "microbit",
+   "fields": {
+    "touchPins": {
+     "type": "dropdown",
+     "options": [
+      "0",
+      "1",
+      "2"
+     ]
+    }
+   }
+  },
+  "microbit_whenButtonPressed": {
+   "category": "microbit",
+   "shape": "hat",
+   "inputs": {
+    "BTN": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_buttons",
+     "menu": "buttons",
+     "default": "A"
+    }
+   },
+   "fields": {},
+   "text": "when [BTN] button pressed",
+   "ext": "microbit"
+  },
+  "microbit_whenGesture": {
+   "category": "microbit",
+   "shape": "hat",
+   "inputs": {
+    "GESTURE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_gestures",
+     "menu": "gestures",
+     "default": "moved"
+    }
+   },
+   "fields": {},
+   "text": "when [GESTURE]",
+   "ext": "microbit"
+  },
+  "microbit_whenPinConnected": {
+   "category": "microbit",
+   "shape": "hat",
+   "inputs": {
+    "PIN": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_touchPins",
+     "menu": "touchPins",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "text": "when pin [PIN] connected",
+   "ext": "microbit"
+  },
+  "microbit_whenTilted": {
+   "category": "microbit",
+   "shape": "hat",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "microbit_menu_tiltDirectionAny",
+     "menu": "tiltDirectionAny",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "when tilted [DIRECTION]",
+   "ext": "microbit"
+  },
+  "motion_align_scene": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "ALIGNMENT": {
+     "type": "dropdown",
+     "options": [
+      "bottom-left",
+      "bottom-right",
+      "middle",
+      "top-left",
+      "top-right"
+     ]
+    }
+   },
+   "in_toolbox": false
+  },
+  "motion_changexby": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DX": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_changeyby": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_direction": {
+   "category": "motion",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_glidesecstoxy": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "SECS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    },
+    "X": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    },
+    "Y": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_glideto": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "SECS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    },
+    "TO": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "motion_glideto_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_glideto_menu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "TO": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_random_+_mouse_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "motion_goto": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "TO": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "motion_goto_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_goto_menu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "TO": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_random_+_mouse_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "motion_gotoxy": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "X": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    },
+    "Y": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_ifonedgebounce": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_movesteps": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "STEPS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_pointindirection": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_angle",
+     "default": "90"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_pointtowards": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "TOWARDS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "motion_pointtowards_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_pointtowards_menu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "TOWARDS": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_mouse_+_random_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "motion_scroll_right": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DISTANCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "motion_scroll_up": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DISTANCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "motion_setrotationstyle": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "STYLE": {
+     "type": "dropdown",
+     "options": [
+      "left-right",
+      "all around"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "motion_setx": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "X": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_sety": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "Y": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_turnleft": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DEGREES": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "15"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_turnright": {
+   "category": "motion",
+   "shape": "statement",
+   "inputs": {
+    "DEGREES": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "15"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_xposition": {
+   "category": "motion",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_xscroll": {
+   "category": "motion",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "motion_yposition": {
+   "category": "motion",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "motion_yscroll": {
+   "category": "motion",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "music_changeTempo": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "TEMPO": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "20"
+    }
+   },
+   "fields": {},
+   "text": "change tempo by [TEMPO]",
+   "ext": "music"
+  },
+  "music_getTempo": {
+   "category": "music",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "tempo",
+   "ext": "music"
+  },
+  "music_menu_DRUM": {
+   "category": "music",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "music",
+   "fields": {
+    "DRUM": {
+     "type": "dropdown",
+     "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18"
+     ]
+    }
+   }
+  },
+  "music_menu_INSTRUMENT": {
+   "category": "music",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "music",
+   "fields": {
+    "INSTRUMENT": {
+     "type": "dropdown",
+     "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+     ]
+    }
+   }
+  },
+  "music_midiPlayDrumForBeats": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "DRUM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "music_menu_DRUM",
+     "menu": "DRUM",
+     "default": "1"
+    },
+    "BEATS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.25"
+    }
+   },
+   "fields": {},
+   "text": "play drum [DRUM] for [BEATS] beats",
+   "ext": "music"
+  },
+  "music_midiSetInstrument": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "INSTRUMENT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "set instrument to [INSTRUMENT]",
+   "ext": "music"
+  },
+  "music_playDrumForBeats": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "DRUM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "music_menu_DRUM",
+     "menu": "DRUM",
+     "default": "1"
+    },
+    "BEATS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.25"
+    }
+   },
+   "fields": {},
+   "text": "play drum [DRUM] for [BEATS] beats",
+   "ext": "music"
+  },
+  "music_playNoteForBeats": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "NOTE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "note",
+     "default": "60"
+    },
+    "BEATS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.25"
+    }
+   },
+   "fields": {},
+   "text": "play note [NOTE] for [BEATS] beats",
+   "ext": "music"
+  },
+  "music_restForBeats": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "BEATS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.25"
+    }
+   },
+   "fields": {},
+   "text": "rest for [BEATS] beats",
+   "ext": "music"
+  },
+  "music_setInstrument": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "INSTRUMENT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "music_menu_INSTRUMENT",
+     "menu": "INSTRUMENT",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "set instrument to [INSTRUMENT]",
+   "ext": "music"
+  },
+  "music_setTempo": {
+   "category": "music",
+   "shape": "statement",
+   "inputs": {
+    "TEMPO": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "60"
+    }
+   },
+   "fields": {},
+   "text": "set tempo to [TEMPO]",
+   "ext": "music"
+  },
+  "note": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "NOTE": {
+     "type": "text"
+    }
+   }
+  },
+  "operator_add": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    },
+    "NUM2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_and": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND1": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "OPERAND2": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_contains": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "STRING1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "apple"
+    },
+    "STRING2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "a"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_divide": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    },
+    "NUM2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_equals": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text"
+    },
+    "OPERAND2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_gt": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text"
+    },
+    "OPERAND2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_join": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "STRING1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "apple"
+    },
+    "STRING2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "banana"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_length": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "STRING": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "apple"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_letter_of": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "LETTER": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_whole_number",
+     "default": "1"
+    },
+    "STRING": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "apple"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_lt": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text"
+    },
+    "OPERAND2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_mathop": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {
+    "OPERATOR": {
+     "type": "dropdown",
+     "options": [
+      "abs",
+      "floor",
+      "ceiling",
+      "sqrt",
+      "sin",
+      "cos",
+      "tan",
+      "asin",
+      "acos",
+      "atan",
+      "ln",
+      "log",
+      "e ^",
+      "10 ^"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "operator_mod": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    },
+    "NUM2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_multiply": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    },
+    "NUM2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_not": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_or": {
+   "category": "operators",
+   "shape": "boolean",
+   "inputs": {
+    "OPERAND1": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    },
+    "OPERAND2": {
+     "type": "value",
+     "boolean": true,
+     "shadow": null
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_random": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "FROM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    },
+    "TO": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_round": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "operator_subtract": {
+   "category": "operators",
+   "shape": "reporter",
+   "inputs": {
+    "NUM1": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    },
+    "NUM2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "pen_changePenColorParamBy": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "COLOR_PARAM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "pen_menu_colorParam",
+     "menu": "colorParam",
+     "default": "color"
+    },
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "text": "change pen [COLOR_PARAM] by [VALUE]",
+   "ext": "pen"
+  },
+  "pen_changePenHueBy": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "HUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "change pen color by [HUE]",
+   "ext": "pen"
+  },
+  "pen_changePenShadeBy": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "SHADE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "change pen shade by [SHADE]",
+   "ext": "pen"
+  },
+  "pen_changePenSizeBy": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "SIZE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "change pen size by [SIZE]",
+   "ext": "pen"
+  },
+  "pen_clear": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "text": "erase all",
+   "ext": "pen"
+  },
+  "pen_menu_colorParam": {
+   "category": "pen",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "pen",
+   "fields": {
+    "colorParam": {
+     "type": "dropdown",
+     "options": [
+      "color",
+      "saturation",
+      "brightness",
+      "transparency"
+     ]
+    }
+   }
+  },
+  "pen_penDown": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "text": "pen down",
+   "ext": "pen"
+  },
+  "pen_penUp": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "text": "pen up",
+   "ext": "pen"
+  },
+  "pen_setPenColorParamTo": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "COLOR_PARAM": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "pen_menu_colorParam",
+     "menu": "colorParam",
+     "default": "color"
+    },
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "set pen [COLOR_PARAM] to [VALUE]",
+   "ext": "pen"
+  },
+  "pen_setPenColorToColor": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "COLOR": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "colour_picker"
+    }
+   },
+   "fields": {},
+   "text": "set pen color to [COLOR]",
+   "ext": "pen"
+  },
+  "pen_setPenHueToNumber": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "HUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "set pen color to [HUE]",
+   "ext": "pen"
+  },
+  "pen_setPenShadeToNumber": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "SHADE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "set pen shade to [SHADE]",
+   "ext": "pen"
+  },
+  "pen_setPenSizeTo": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {
+    "SIZE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "set pen size to [SIZE]",
+   "ext": "pen"
+  },
+  "pen_stamp": {
+   "category": "pen",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "text": "stamp",
+   "ext": "pen"
+  },
+  "procedures_call": {
+   "category": "myblocks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "procedures_declaration": {
+   "category": "myblocks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "procedures_definition": {
+   "category": "myblocks",
+   "shape": "hat",
+   "inputs": {
+    "custom_block": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "procedures_prototype"
+    }
+   },
+   "fields": {},
+   "in_toolbox": false
+  },
+  "procedures_prototype": {
+   "category": "myblocks",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "sensing_answer": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_askandwait": {
+   "category": "sensing",
+   "shape": "statement",
+   "inputs": {
+    "QUESTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "What's your name?"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_coloristouchingcolor": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {
+    "COLOR": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "colour_picker"
+    },
+    "COLOR2": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "colour_picker"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_current": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {
+    "CURRENTMENU": {
+     "type": "dropdown",
+     "options": [
+      "YEAR",
+      "MONTH",
+      "DATE",
+      "DAYOFWEEK",
+      "HOUR",
+      "MINUTE",
+      "SECOND"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "sensing_dayssince2000": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_distanceto": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {
+    "DISTANCETOMENU": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sensing_distancetomenu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_distancetomenu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "DISTANCETOMENU": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_mouse_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "sensing_keyoptions": {
+   "category": "sensing",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "KEY_OPTION": {
+     "type": "dropdown",
+     "options": [
+      "space",
+      "up arrow",
+      "down arrow",
+      "right arrow",
+      "left arrow",
+      "any",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+     ]
+    }
+   },
+   "in_toolbox": false
+  },
+  "sensing_keypressed": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {
+    "KEY_OPTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sensing_keyoptions"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_loud": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "sensing_loudness": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_mousedown": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_mousex": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_mousey": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_of": {
+   "category": "sensing",
+   "shape": "reporter",
+   "in_toolbox": true,
+   "inputs": {
+    "OBJECT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sensing_of_object_menu"
+    }
+   },
+   "fields": {
+    "PROPERTY": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "properties of OBJECT"
+    }
+   }
+  },
+  "sensing_of_object_menu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "OBJECT": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_stage_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "sensing_online": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "sensing_resettimer": {
+   "category": "sensing",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_setdragmode": {
+   "category": "sensing",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {
+    "DRAG_MODE": {
+     "type": "dropdown",
+     "options": [
+      "draggable",
+      "not draggable"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "sensing_timer": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_touchingcolor": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {
+    "COLOR": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "colour_picker"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_touchingobject": {
+   "category": "sensing",
+   "shape": "boolean",
+   "inputs": {
+    "TOUCHINGOBJECTMENU": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sensing_touchingobjectmenu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sensing_touchingobjectmenu": {
+   "category": null,
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "TOUCHINGOBJECTMENU": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sprites+_mouse_+_edge_"
+    }
+   },
+   "in_toolbox": false
+  },
+  "sensing_userid": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": false
+  },
+  "sensing_username": {
+   "category": "sensing",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_changeeffectby": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {
+    "EFFECT": {
+     "type": "dropdown",
+     "options": [
+      "PITCH",
+      "PAN"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "sound_changevolumeby": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "VOLUME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "-10"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_cleareffects": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_play": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "SOUND_MENU": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sound_sounds_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_playuntildone": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "SOUND_MENU": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "sound_sounds_menu"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_seteffectto": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "VALUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {
+    "EFFECT": {
+     "type": "dropdown",
+     "options": [
+      "PITCH",
+      "PAN"
+     ]
+    }
+   },
+   "in_toolbox": true
+  },
+  "sound_setvolumeto": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {
+    "VOLUME": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_sounds_menu": {
+   "category": "menu",
+   "shape": "menu",
+   "inputs": {},
+   "fields": {
+    "SOUND_MENU": {
+     "type": "dropdown",
+     "options": null,
+     "dynamic": "sounds"
+    }
+   },
+   "in_toolbox": false
+  },
+  "sound_stopallsounds": {
+   "category": "sound",
+   "shape": "statement",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "sound_volume": {
+   "category": "sound",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "in_toolbox": true
+  },
+  "text": {
+   "category": "primitive",
+   "shape": "primitive",
+   "inputs": {},
+   "fields": {
+    "TEXT": {
+     "type": "text"
+    }
+   }
+  },
+  "text2speech_menu_languages": {
+   "category": "text2speech",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "text2speech",
+   "fields": {
+    "languages": {
+     "type": "dropdown",
+     "options": [
+      "ar",
+      "zh-cn",
+      "da",
+      "nl",
+      "en",
+      "fr",
+      "de",
+      "hi",
+      "is",
+      "it",
+      "ja",
+      "ko",
+      "nb",
+      "pl",
+      "pt-br",
+      "pt",
+      "ro",
+      "ru",
+      "es",
+      "es-419",
+      "sv",
+      "tr",
+      "cy"
+     ]
+    }
+   }
+  },
+  "text2speech_menu_voices": {
+   "category": "text2speech",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "text2speech",
+   "fields": {
+    "voices": {
+     "type": "dropdown",
+     "options": [
+      "ALTO",
+      "TENOR",
+      "SQUEAK",
+      "GIANT",
+      "KITTEN"
+     ]
+    }
+   }
+  },
+  "text2speech_setLanguage": {
+   "category": "text2speech",
+   "shape": "statement",
+   "inputs": {
+    "LANGUAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text2speech_menu_languages",
+     "menu": "languages",
+     "default": "en"
+    }
+   },
+   "fields": {},
+   "text": "set language to [LANGUAGE]",
+   "ext": "text2speech"
+  },
+  "text2speech_setVoice": {
+   "category": "text2speech",
+   "shape": "statement",
+   "inputs": {
+    "VOICE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text2speech_menu_voices",
+     "menu": "voices",
+     "default": "ALTO"
+    }
+   },
+   "fields": {},
+   "text": "set voice to [VOICE]",
+   "ext": "text2speech"
+  },
+  "text2speech_speakAndWait": {
+   "category": "text2speech",
+   "shape": "statement",
+   "inputs": {
+    "WORDS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "hello"
+    }
+   },
+   "fields": {},
+   "text": "speak [WORDS]",
+   "ext": "text2speech"
+  },
+  "translate_getTranslate": {
+   "category": "translate",
+   "shape": "reporter",
+   "inputs": {
+    "WORDS": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "text",
+     "default": "hello"
+    },
+    "LANGUAGE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "translate_menu_languages",
+     "menu": "languages",
+     "default": "ckb"
+    }
+   },
+   "fields": {},
+   "text": "translate [WORDS] to [LANGUAGE]",
+   "ext": "translate"
+  },
+  "translate_getViewerLanguage": {
+   "category": "translate",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "language",
+   "ext": "translate"
+  },
+  "translate_menu_languages": {
+   "category": "translate",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "translate",
+   "fields": {
+    "languages": {
+     "type": "dropdown",
+     "options": [
+      "am",
+      "ar",
+      "az",
+      "eu",
+      "bg",
+      "ca",
+      "zh-cn",
+      "zh-tw",
+      "hr",
+      "cs",
+      "da",
+      "nl",
+      "en",
+      "et",
+      "fi",
+      "fr",
+      "gl",
+      "de",
+      "el",
+      "he",
+      "hu",
+      "is",
+      "id",
+      "ga",
+      "it",
+      "ja",
+      "ko",
+      "ckb",
+      "lv",
+      "lt",
+      "mi",
+      "nb",
+      "fa",
+      "pl",
+      "pt",
+      "ro",
+      "ru",
+      "gd",
+      "sr",
+      "sk",
+      "sl",
+      "es",
+      "sv",
+      "th",
+      "tr",
+      "uk",
+      "vi",
+      "cy",
+      "zu",
+      "he",
+      "zh-cn"
+     ]
+    }
+   }
+  },
+  "videoSensing_menu_ATTRIBUTE": {
+   "category": "videoSensing",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "videoSensing",
+   "fields": {
+    "ATTRIBUTE": {
+     "type": "dropdown",
+     "options": [
+      "motion",
+      "direction"
+     ]
+    }
+   }
+  },
+  "videoSensing_menu_SUBJECT": {
+   "category": "videoSensing",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "videoSensing",
+   "fields": {
+    "SUBJECT": {
+     "type": "dropdown",
+     "options": [
+      "this sprite",
+      "Stage"
+     ]
+    }
+   }
+  },
+  "videoSensing_menu_VIDEO_STATE": {
+   "category": "videoSensing",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "videoSensing",
+   "fields": {
+    "VIDEO_STATE": {
+     "type": "dropdown",
+     "options": [
+      "off",
+      "on",
+      "on-flipped"
+     ]
+    }
+   }
+  },
+  "videoSensing_setVideoTransparency": {
+   "category": "videoSensing",
+   "shape": "statement",
+   "inputs": {
+    "TRANSPARENCY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "set video transparency to [TRANSPARENCY]",
+   "ext": "videoSensing"
+  },
+  "videoSensing_videoOn": {
+   "category": "videoSensing",
+   "shape": "reporter",
+   "inputs": {
+    "ATTRIBUTE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "videoSensing_menu_ATTRIBUTE",
+     "menu": "ATTRIBUTE",
+     "default": "motion"
+    },
+    "SUBJECT": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "videoSensing_menu_SUBJECT",
+     "menu": "SUBJECT",
+     "default": "this sprite"
+    }
+   },
+   "fields": {},
+   "text": "video [ATTRIBUTE] on [SUBJECT]",
+   "ext": "videoSensing"
+  },
+  "videoSensing_videoToggle": {
+   "category": "videoSensing",
+   "shape": "statement",
+   "inputs": {
+    "VIDEO_STATE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "videoSensing_menu_VIDEO_STATE",
+     "menu": "VIDEO_STATE",
+     "default": "on"
+    }
+   },
+   "fields": {},
+   "text": "turn video [VIDEO_STATE]",
+   "ext": "videoSensing"
+  },
+  "videoSensing_whenMotionGreaterThan": {
+   "category": "videoSensing",
+   "shape": "hat",
+   "inputs": {
+    "REFERENCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "10"
+    }
+   },
+   "fields": {},
+   "text": "when video motion > [REFERENCE]",
+   "ext": "videoSensing"
+  },
+  "wedo2_getDistance": {
+   "category": "wedo2",
+   "shape": "reporter",
+   "inputs": {},
+   "fields": {},
+   "text": "distance",
+   "ext": "wedo2"
+  },
+  "wedo2_getTiltAngle": {
+   "category": "wedo2",
+   "shape": "reporter",
+   "inputs": {
+    "TILT_DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_TILT_DIRECTION",
+     "menu": "TILT_DIRECTION",
+     "default": "up"
+    }
+   },
+   "fields": {},
+   "text": "tilt angle [TILT_DIRECTION]",
+   "ext": "wedo2"
+  },
+  "wedo2_isTilted": {
+   "category": "wedo2",
+   "shape": "boolean",
+   "inputs": {
+    "TILT_DIRECTION_ANY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_TILT_DIRECTION_ANY",
+     "menu": "TILT_DIRECTION_ANY",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "tilted [TILT_DIRECTION_ANY]?",
+   "ext": "wedo2"
+  },
+  "wedo2_menu_MOTOR_DIRECTION": {
+   "category": "wedo2",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "wedo2",
+   "fields": {
+    "MOTOR_DIRECTION": {
+     "type": "dropdown",
+     "options": [
+      "this way",
+      "that way",
+      "reverse"
+     ]
+    }
+   }
+  },
+  "wedo2_menu_MOTOR_ID": {
+   "category": "wedo2",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "wedo2",
+   "fields": {
+    "MOTOR_ID": {
+     "type": "dropdown",
+     "options": [
+      "motor",
+      "motor A",
+      "motor B",
+      "all motors"
+     ]
+    }
+   }
+  },
+  "wedo2_menu_OP": {
+   "category": "wedo2",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "wedo2",
+   "fields": {
+    "OP": {
+     "type": "dropdown",
+     "options": [
+      "<",
+      ">"
+     ]
+    }
+   }
+  },
+  "wedo2_menu_TILT_DIRECTION": {
+   "category": "wedo2",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "wedo2",
+   "fields": {
+    "TILT_DIRECTION": {
+     "type": "dropdown",
+     "options": [
+      "up",
+      "down",
+      "left",
+      "right"
+     ]
+    }
+   }
+  },
+  "wedo2_menu_TILT_DIRECTION_ANY": {
+   "category": "wedo2",
+   "shape": "menu",
+   "inputs": {},
+   "ext": "wedo2",
+   "fields": {
+    "TILT_DIRECTION_ANY": {
+     "type": "dropdown",
+     "options": [
+      "up",
+      "down",
+      "left",
+      "right",
+      "any"
+     ]
+    }
+   }
+  },
+  "wedo2_motorOff": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "motor"
+    }
+   },
+   "fields": {},
+   "text": "turn [MOTOR_ID] off",
+   "ext": "wedo2"
+  },
+  "wedo2_motorOn": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "motor"
+    }
+   },
+   "fields": {},
+   "text": "turn [MOTOR_ID] on",
+   "ext": "wedo2"
+  },
+  "wedo2_motorOnFor": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "motor"
+    },
+    "DURATION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "1"
+    }
+   },
+   "fields": {},
+   "text": "turn [MOTOR_ID] on for [DURATION] seconds",
+   "ext": "wedo2"
+  },
+  "wedo2_playNoteFor": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "NOTE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "60"
+    },
+    "DURATION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "0.5"
+    }
+   },
+   "fields": {},
+   "text": "play note [NOTE] for [DURATION] seconds",
+   "ext": "wedo2"
+  },
+  "wedo2_setLightHue": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "HUE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "set light color to [HUE]",
+   "ext": "wedo2"
+  },
+  "wedo2_setMotorDirection": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "motor"
+    },
+    "MOTOR_DIRECTION": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_DIRECTION",
+     "menu": "MOTOR_DIRECTION",
+     "default": "this way"
+    }
+   },
+   "fields": {},
+   "text": "set [MOTOR_ID] direction to [MOTOR_DIRECTION]",
+   "ext": "wedo2"
+  },
+  "wedo2_startMotorPower": {
+   "category": "wedo2",
+   "shape": "statement",
+   "inputs": {
+    "MOTOR_ID": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_MOTOR_ID",
+     "menu": "MOTOR_ID",
+     "default": "motor"
+    },
+    "POWER": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "100"
+    }
+   },
+   "fields": {},
+   "text": "set [MOTOR_ID] power to [POWER]",
+   "ext": "wedo2"
+  },
+  "wedo2_whenDistance": {
+   "category": "wedo2",
+   "shape": "hat",
+   "inputs": {
+    "OP": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_OP",
+     "menu": "OP",
+     "default": "<"
+    },
+    "REFERENCE": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "math_number",
+     "default": "50"
+    }
+   },
+   "fields": {},
+   "text": "when distance [OP] [REFERENCE]",
+   "ext": "wedo2"
+  },
+  "wedo2_whenTilted": {
+   "category": "wedo2",
+   "shape": "hat",
+   "inputs": {
+    "TILT_DIRECTION_ANY": {
+     "type": "value",
+     "boolean": false,
+     "shadow": "wedo2_menu_TILT_DIRECTION_ANY",
+     "menu": "TILT_DIRECTION_ANY",
+     "default": "any"
+    }
+   },
+   "fields": {},
+   "text": "when tilted [TILT_DIRECTION_ANY]",
+   "ext": "wedo2"
+  }
+ },
+ "extensions": {
+  "pen": {
+   "name": "Pen",
+   "blocks": [
+    "pen_changePenColorParamBy",
+    "pen_changePenHueBy",
+    "pen_changePenShadeBy",
+    "pen_changePenSizeBy",
+    "pen_clear",
+    "pen_penDown",
+    "pen_penUp",
+    "pen_setPenColorParamTo",
+    "pen_setPenColorToColor",
+    "pen_setPenHueToNumber",
+    "pen_setPenShadeToNumber",
+    "pen_setPenSizeTo",
+    "pen_stamp"
+   ],
+   "menus": [
+    "pen_menu_colorParam"
+   ]
+  },
+  "music": {
+   "name": "Music",
+   "blocks": [
+    "music_changeTempo",
+    "music_getTempo",
+    "music_midiPlayDrumForBeats",
+    "music_midiSetInstrument",
+    "music_playDrumForBeats",
+    "music_playNoteForBeats",
+    "music_restForBeats",
+    "music_setInstrument",
+    "music_setTempo"
+   ],
+   "menus": [
+    "music_menu_DRUM",
+    "music_menu_INSTRUMENT"
+   ]
+  },
+  "videoSensing": {
+   "name": "Video Sensing",
+   "blocks": [
+    "videoSensing_setVideoTransparency",
+    "videoSensing_videoOn",
+    "videoSensing_videoToggle",
+    "videoSensing_whenMotionGreaterThan"
+   ],
+   "menus": [
+    "videoSensing_menu_ATTRIBUTE",
+    "videoSensing_menu_SUBJECT",
+    "videoSensing_menu_VIDEO_STATE"
+   ]
+  },
+  "text2speech": {
+   "name": "Text to Speech",
+   "blocks": [
+    "text2speech_setLanguage",
+    "text2speech_setVoice",
+    "text2speech_speakAndWait"
+   ],
+   "menus": [
+    "text2speech_menu_languages",
+    "text2speech_menu_voices"
+   ]
+  },
+  "translate": {
+   "name": "Translate",
+   "blocks": [
+    "translate_getTranslate",
+    "translate_getViewerLanguage"
+   ],
+   "menus": [
+    "translate_menu_languages"
+   ]
+  },
+  "makeymakey": {
+   "name": "Makey Makey",
+   "blocks": [
+    "makeymakey_whenCodePressed",
+    "makeymakey_whenMakeyKeyPressed"
+   ],
+   "menus": [
+    "makeymakey_menu_KEY",
+    "makeymakey_menu_SEQUENCE"
+   ]
+  },
+  "microbit": {
+   "name": "micro:bit",
+   "blocks": [
+    "microbit_displayClear",
+    "microbit_displaySymbol",
+    "microbit_displayText",
+    "microbit_getTiltAngle",
+    "microbit_isButtonPressed",
+    "microbit_isTilted",
+    "microbit_whenButtonPressed",
+    "microbit_whenGesture",
+    "microbit_whenPinConnected",
+    "microbit_whenTilted"
+   ],
+   "menus": [
+    "microbit_menu_buttons",
+    "microbit_menu_gestures",
+    "microbit_menu_pinState",
+    "microbit_menu_tiltDirection",
+    "microbit_menu_tiltDirectionAny",
+    "microbit_menu_touchPins"
+   ]
+  },
+  "ev3": {
+   "name": "LEGO EV3",
+   "blocks": [
+    "ev3_beep",
+    "ev3_buttonPressed",
+    "ev3_getBrightness",
+    "ev3_getDistance",
+    "ev3_getMotorPosition",
+    "ev3_motorSetPower",
+    "ev3_motorTurnClockwise",
+    "ev3_motorTurnCounterClockwise",
+    "ev3_whenBrightnessLessThan",
+    "ev3_whenButtonPressed",
+    "ev3_whenDistanceLessThan"
+   ],
+   "menus": [
+    "ev3_menu_motorPorts",
+    "ev3_menu_sensorPorts"
+   ]
+  },
+  "boost": {
+   "name": "BOOST",
+   "blocks": [
+    "boost_getMotorPosition",
+    "boost_getTiltAngle",
+    "boost_motorOff",
+    "boost_motorOn",
+    "boost_motorOnFor",
+    "boost_motorOnForRotation",
+    "boost_seeingColor",
+    "boost_setLightHue",
+    "boost_setMotorDirection",
+    "boost_setMotorPower",
+    "boost_whenColor",
+    "boost_whenTilted"
+   ],
+   "menus": [
+    "boost_menu_COLOR",
+    "boost_menu_MOTOR_DIRECTION",
+    "boost_menu_MOTOR_ID",
+    "boost_menu_MOTOR_REPORTER_ID",
+    "boost_menu_TILT_DIRECTION",
+    "boost_menu_TILT_DIRECTION_ANY"
+   ]
+  },
+  "wedo2": {
+   "name": "WeDo 2.0",
+   "blocks": [
+    "wedo2_getDistance",
+    "wedo2_getTiltAngle",
+    "wedo2_isTilted",
+    "wedo2_motorOff",
+    "wedo2_motorOn",
+    "wedo2_motorOnFor",
+    "wedo2_playNoteFor",
+    "wedo2_setLightHue",
+    "wedo2_setMotorDirection",
+    "wedo2_startMotorPower",
+    "wedo2_whenDistance",
+    "wedo2_whenTilted"
+   ],
+   "menus": [
+    "wedo2_menu_MOTOR_DIRECTION",
+    "wedo2_menu_MOTOR_ID",
+    "wedo2_menu_OP",
+    "wedo2_menu_TILT_DIRECTION",
+    "wedo2_menu_TILT_DIRECTION_ANY"
+   ]
+  },
+  "gdxfor": {
+   "name": "Force and Acceleration",
+   "blocks": [
+    "gdxfor_getAcceleration",
+    "gdxfor_getForce",
+    "gdxfor_getSpinSpeed",
+    "gdxfor_getTilt",
+    "gdxfor_isFreeFalling",
+    "gdxfor_isTilted",
+    "gdxfor_whenForcePushedOrPulled",
+    "gdxfor_whenGesture",
+    "gdxfor_whenTilted"
+   ],
+   "menus": [
+    "gdxfor_menu_axisOptions",
+    "gdxfor_menu_gestureOptions",
+    "gdxfor_menu_pushPullOptions",
+    "gdxfor_menu_tiltAnyOptions",
+    "gdxfor_menu_tiltOptions"
+   ]
+  }
+ }
+}

@@ -112,6 +112,16 @@ class Workspace:
             fh.write(data)
         return dest
 
+    def prune_backups(self, path: Path, keep: int) -> None:
+        """Keep only the newest ``keep`` backups of one project (0 = keep everything)."""
+        if keep <= 0:
+            return
+        rel = path.relative_to(self.root)
+        folder = self.backup_dir / rel.parent
+        mine = sorted(folder.glob(f"{path.stem}.????????-??????*.sb3"), key=lambda p: p.stat().st_mtime)
+        for old in mine[:-keep]:
+            old.unlink(missing_ok=True)
+
     def write(self, path: Path, sb3: Sb3, *, overwrite: bool) -> Path | None:
         """Write an .sb3. If the file exists it is backed up first.
 

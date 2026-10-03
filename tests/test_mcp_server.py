@@ -10,6 +10,8 @@ from mcp.client.stdio import stdio_client
 EXPECTED_TOOLS = {
     "list_projects", "read_project", "get_project_json",
     "save_project_json", "create_project", "add_script",
+    "list_stock_assets", "add_stock_art", "add_sprite", "add_costume", "add_sound",
+    "update_sprite", "remove_asset", "delete_sprite",
 }
 
 

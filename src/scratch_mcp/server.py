@@ -14,6 +14,10 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
+from . import editing, sounds, stock_art
+from .blocks import MENUS
+from . import registry
+from .ctx import Ctx
 from .render import ScriptRenderer, summarize_project
 from .template import blank_project
 from .textparse import ParseError, ScriptBuilder, find_target
@@ -162,9 +166,258 @@ class ScratchTools:
             out.append(f"Previous version backed up to {self.ws.display(backup)}.")
         return "\n".join(out).rstrip()
 
+    # 7-13: assets and sprites ----------------------------------------------
+    def _edit(self, project: str, fn) -> tuple[str, str]:
+        """Load a project, apply ``fn(data, assets)`` to a copy, validate, back up and save.
+
+        Returns (message from fn, backup note)."""
+        path = self.ws.resolve(project)
+        sb3 = self.ws.load(path)
+        data, assets = copy.deepcopy(sb3.project), dict(sb3.assets)
+        try:
+            message = fn(data, assets)
+        except editing.EditError as exc:
+            raise WorkspaceError(f"Not saved. {exc}") from exc
+        result = validate_project(data, set(assets))
+        if not result.ok:
+            raise WorkspaceError(f"Not saved - the project would be invalid:\n{result.format()}")
+        backup = self.ws.write(path, Sb3(data, assets), overwrite=True)
+        note = f"Previous version backed up to {self.ws.display(backup)}." if backup else ""
+        return message, note
+
+    @staticmethod
+    def _done(message: str, note: str) -> str:
+        return f"{message}\n{note}".rstrip()
+
+    def list_stock_assets(self) -> str:
+        lines = ["Stock art for add_stock_art (original drawings, ready to animate):"]
+        for name in stock_art.STOCK_NAMES:
+            description, costumes, is_backdrop = stock_art.stock_art(name)
+            kind = "backdrop (Stage)" if is_backdrop else "sprite"
+            lines.append(f"- {name} [{kind}]: {description}")
+        lines += ["", "Sound presets for add_sound(preset=...):"]
+        lines += [f"- {name}: {desc}" for name, desc in sounds.PRESETS.items()]
+        lines += ["", "You can also draw your own: add_costume takes any SVG, add_sound takes base64 WAV data."]
+        return "\n".join(lines)
+
+    def add_stock_art(
+        self, project: str, art: str, sprite: str | None = None, text: str | None = None,
+        x: float = 0, y: float = 0, size: float = 100, replace: bool = False,
+    ) -> str:
+        if art not in stock_art.STOCK_NAMES:
+            raise WorkspaceError(f"Unknown stock art '{art}'. Choose from: {', '.join(stock_art.STOCK_NAMES)}.")
+        _, costumes, is_backdrop = stock_art.stock_art(art, text)
+
+        def fn(data, assets):
+            created = False
+            if is_backdrop:
+                if sprite and sprite.strip().lower() != "stage":
+                    raise editing.EditError(f"'{art}' is a backdrop; it can only go on the Stage.")
+                target = editing.find_target(data, "Stage")
+            else:
+                name = sprite or art.capitalize()
+                try:
+                    target = editing.find_target(data, name)
+                    if target.get("isStage"):
+                        raise editing.EditError(f"'{art}' is a sprite costume set; it can't go on the Stage.")
+                except editing.EditError as exc:
+                    if "No sprite named" not in str(exc):
+                        raise
+                    target = editing.new_sprite(data, name, x, y, size)
+                    created = True
+            if replace:
+                target["costumes"], target["currentCostume"] = [], 0
+            for cname, svg, cx, cy in costumes:
+                editing.add_costume(data, assets, target, cname, svg, (cx, cy))
+            editing.prune_unused_assets(data, assets)
+            names = ", ".join(c["name"] for c in target["costumes"])
+            where = "the Stage" if target.get("isStage") else f"sprite '{target['name']}'"
+            return (f"{'Created ' + where + ' and added' if created else 'Added'} the '{art}' art to "
+                    f"{where}. Costumes now: {names}.")
+
+        return self._done(*self._edit(project, fn))
+
+    def add_sprite(
+        self, project: str, name: str, svg: str | None = None, costume_name: str = "costume1",
+        x: float = 0, y: float = 0, size: float = 100, direction: float = 90, visible: bool = True,
+    ) -> str:
+        def fn(data, assets):
+            sprite = editing.new_sprite(data, name, x, y, size, direction, visible)
+            editing.add_costume(data, assets, sprite, costume_name, svg or editing.BLANK_SVG)
+            return (f"Added sprite '{sprite['name']}' at ({x}, {y}) with "
+                    f"{'your costume' if svg else 'a blank costume'} '{costume_name}'. "
+                    "Add more poses with add_costume.")
+
+        return self._done(*self._edit(project, fn))
+
+    def add_costume(
+        self, project: str, sprite: str, name: str, svg: str,
+        rotation_center_x: float | None = None, rotation_center_y: float | None = None,
+    ) -> str:
+        def fn(data, assets):
+            target = editing.find_target(data, sprite)
+            entry = editing.add_costume(data, assets, target, name, svg, (rotation_center_x, rotation_center_y))
+            kind = "backdrop" if target.get("isStage") else "costume"
+            return (f"Added {kind} '{entry['name']}' to {'the Stage' if target.get('isStage') else sprite} "
+                    f"(rotation centre {entry['rotationCenterX']}, {entry['rotationCenterY']}). "
+                    f"It now has {len(target['costumes'])} {kind}s.")
+
+        return self._done(*self._edit(project, fn))
+
+    def add_sound(
+        self, project: str, sprite: str, name: str, preset: str | None = None,
+        wav_base64: str | None = None, seconds: float | None = None, tempo: float | None = None,
+    ) -> str:
+        if bool(preset) == bool(wav_base64):
+            raise WorkspaceError("Give exactly one of preset (see list_stock_assets) or wav_base64.")
+        if preset and preset not in sounds.PRESETS:
+            raise WorkspaceError(f"Unknown sound preset '{preset}'. Choose from: {', '.join(sounds.PRESETS)}.")
+
+        def fn(data, assets):
+            target = editing.find_target(data, sprite)
+            wav = sounds.render_preset(preset, seconds, tempo) if preset else editing.decode_base64(wav_base64, "wav_base64")
+            entry = editing.add_sound(assets, target, name, wav)
+            length = entry["sampleCount"] / entry["rate"]
+            return f"Added sound '{entry['name']}' ({length:.2f} s) to {'the Stage' if target.get('isStage') else sprite}."
+
+        return self._done(*self._edit(project, fn))
+
+    def update_sprite(
+        self, project: str, sprite: str, x: float | None = None, y: float | None = None,
+        size: float | None = None, direction: float | None = None, visible: bool | None = None,
+        costume: str | None = None, new_name: str | None = None, rotation_style: str | None = None,
+        bring_to_front: bool = False,
+    ) -> str:
+        def fn(data, assets):
+            target = editing.find_target(data, sprite)
+            changed = []
+            if target.get("isStage"):
+                if any(v is not None for v in (x, y, size, direction, visible, new_name, rotation_style)) or bring_to_front:
+                    raise editing.EditError("The Stage only supports the 'costume' (backdrop) option.")
+            for key, value in (("x", x), ("y", y), ("size", size), ("direction", direction), ("visible", visible)):
+                if value is not None:
+                    target[key] = value
+                    changed.append(f"{key}={value}")
+            if rotation_style is not None:
+                if rotation_style not in ("all around", "left-right", "don't rotate"):
+                    raise editing.EditError("rotation_style must be 'all around', 'left-right' or 'don't rotate'.")
+                target["rotationStyle"] = rotation_style
+                changed.append(f"rotationStyle={rotation_style}")
+            if costume is not None:
+                names = [c.get("name") for c in target.get("costumes") or []]
+                if costume in names:
+                    target["currentCostume"] = names.index(costume)
+                elif costume.isdigit() and int(costume) < len(names):
+                    target["currentCostume"] = int(costume)
+                else:
+                    raise editing.EditError(f"No costume '{costume}'. Available: {', '.join(names)}")
+                changed.append(f"costume={names[target['currentCostume']]}")
+            if bring_to_front:
+                target["layerOrder"] = max(t.get("layerOrder", 0) for t in data["targets"]) + 1
+                changed.append("moved to front")
+            if new_name is not None and new_name != target["name"]:
+                wanted = new_name.strip()
+                if not wanted or wanted.lower() == "stage":
+                    raise editing.EditError("Invalid new_name.")
+                if any(t is not target and str(t.get("name", "")).lower() == wanted.lower() for t in data["targets"]):
+                    raise editing.EditError(f"A sprite named '{wanted}' already exists.")
+                old = target["name"]
+                for t in data["targets"]:  # keep menus like "touching (Cat v)" pointing at the sprite
+                    for block in (t.get("blocks") or {}).values():
+                        if isinstance(block, dict) and block.get("opcode") in MENUS:
+                            for fld in (block.get("fields") or {}).values():
+                                if isinstance(fld, list) and fld and fld[0] == old:
+                                    fld[0] = wanted
+                target["name"] = wanted
+                changed.append(f"renamed from '{old}'")
+            if not changed:
+                raise editing.EditError("Nothing to change: pass at least one property.")
+            return f"Updated sprite '{target['name']}': " + ", ".join(changed) + "."
+
+        return self._done(*self._edit(project, fn))
+
+    def remove_asset(self, project: str, sprite: str, kind: str, name: str) -> str:
+        if kind not in ("costume", "sound"):
+            raise WorkspaceError("kind must be 'costume' or 'sound'.")
+
+        def fn(data, assets):
+            target = editing.find_target(data, sprite)
+            key = "costumes" if kind == "costume" else "sounds"
+            items = target.get(key) or []
+            idx = next((i for i, a in enumerate(items) if a.get("name") == name), None)
+            if idx is None:
+                raise editing.EditError(f"No {kind} '{name}' on {sprite}. Available: {', '.join(a.get('name', '') for a in items)}")
+            if kind == "costume" and len(items) == 1:
+                raise editing.EditError("A sprite must keep at least one costume.")
+            del items[idx]
+            if kind == "costume":
+                cur = target.get("currentCostume", 0)
+                if cur >= idx and cur > 0:
+                    target["currentCostume"] = cur - 1
+            editing.prune_unused_assets(data, assets)
+            return f"Removed {kind} '{name}' from {sprite}."
+
+        return self._done(*self._edit(project, fn))
+
+    def delete_sprite(self, project: str, sprite: str) -> str:
+        def fn(data, assets):
+            target = editing.find_target(data, sprite)
+            if target.get("isStage"):
+                raise editing.EditError("The Stage can't be deleted.")
+            data["targets"].remove(target)
+            editing.prune_unused_assets(data, assets)
+            return f"Deleted sprite '{target['name']}' and its scripts."
+
+        return self._done(*self._edit(project, fn))
+
+
+GROUP_MODULES = ["project", "scripts", "blocks"]  # modules under scratch_mcp.groups, imported to register their actions
+
+
+def register_groups(mcp: FastMCP, ctx: Ctx) -> None:
+    import importlib
+    import logging
+    import traceback
+
+    from .editing import EditError
+    from .textparse import ParseError
+
+    for mod in GROUP_MODULES:
+        importlib.import_module(f"scratch_mcp.groups.{mod}")
+
+    def make(group: str):
+        async def tool(action: str, args: dict[str, Any] | None = None):
+            try:
+                result = await registry.dispatch(group, ctx, action, args)
+            except (WorkspaceError, EditError, ParseError) as exc:
+                raise ToolError(str(exc)) from exc
+            except ToolError:
+                raise
+            except Exception as exc:  # unexpected: report it, keep the server alive
+                logging.getLogger("scratch_mcp").error("%s.%s failed:\n%s", group, action, traceback.format_exc())
+                raise ToolError(f"Internal error in {group}.{action}: {type(exc).__name__}: {exc}") from exc
+            return registry.to_content(result)
+
+        import typing as _t
+
+        from pydantic import Field as _F
+
+        names = tuple(registry.GROUPS[group]) + ("help",)
+        tool.__name__ = group
+        tool.__annotations__ = {
+            "action": _t.Annotated[_t.Literal[names], _F(description="Which operation to run (see the tool description).")],
+            "args": _t.Annotated[_t.Optional[dict], _F(description="Parameters for the action, as a JSON object.")],
+            "return": list,
+        }
+        return tool
+
+    for group in registry.GROUPS:
+        mcp.add_tool(make(group), name=group, description=registry.describe_group(group))
+
 
 def build_server(root: str | os.PathLike[str]) -> FastMCP:
     tools = ScratchTools(root)
+    ctx = Ctx(root)
     mcp = FastMCP(
         "scratch",
         instructions=(
@@ -227,6 +480,78 @@ def build_server(root: str | os.PathLike[str]) -> FastMCP:
     def add_script(project: str, sprite: str, script: str, x: float | None = None, y: float | None = None) -> str:
         return run(tools.add_script, project, sprite, script, x, y)
 
+    @mcp.tool()
+    def list_stock_assets() -> str:
+        """List the ready-made art (robot, alien, cookie, kitchen backdrop, title card) and
+        sound presets (effects and looping music) that add_stock_art / add_sound can add."""
+        return run(tools.list_stock_assets)
+
+    @mcp.tool()
+    def add_stock_art(
+        project: str, art: str, sprite: str | None = None, text: str | None = None,
+        x: float = 0, y: float = 0, size: float = 100, replace: bool = False,
+    ) -> str:
+        """Add ready-made art to a project. art is one of: robot, alien, cookie, kitchen, title
+        (see list_stock_assets). Sprite art creates the sprite if needed (named after the art unless
+        sprite= is given) with all its poses as costumes; 'kitchen' adds two animated backdrops to the
+        Stage; 'title' draws text=... as a title card. replace=true swaps out existing costumes."""
+        return run(tools.add_stock_art, project, art, sprite, text, x, y, size, replace)
+
+    @mcp.tool()
+    def add_sprite(
+        project: str, name: str, svg: str | None = None, costume_name: str = "costume1",
+        x: float = 0, y: float = 0, size: float = 100, direction: float = 90, visible: bool = True,
+    ) -> str:
+        """Create a new sprite. svg is its first costume (plain SVG text with width/height or a
+        viewBox; stage is 480x360, centre (0,0)); without svg it gets a blank costume."""
+        return run(tools.add_sprite, project, name, svg, costume_name, x, y, size, direction, visible)
+
+    @mcp.tool()
+    def add_costume(
+        project: str, sprite: str, name: str, svg: str,
+        rotation_center_x: float | None = None, rotation_center_y: float | None = None,
+    ) -> str:
+        """Add a costume (or a backdrop, when sprite is "Stage") drawn as SVG text. The rotation
+        centre defaults to the middle of the image; keep it consistent across a character's poses
+        so it doesn't jump when the costume changes. Scripts, external links and fonts that Scratch
+        can't load are rejected."""
+        return run(tools.add_costume, project, sprite, name, svg, rotation_center_x, rotation_center_y)
+
+    @mcp.tool()
+    def add_sound(
+        project: str, sprite: str, name: str, preset: str | None = None, wav_base64: str | None = None,
+        seconds: float | None = None, tempo: float | None = None,
+    ) -> str:
+        """Add a sound to a sprite or the Stage. Either preset (pop, boing, bloop, squeak, alien_warble,
+        crack, munch, chime, whoosh, sad_trombone, music_cheerful, music_calm, music_sneaky) or your
+        own PCM WAV as wav_base64. For music_* presets, seconds sets the length (up to 120) and tempo
+        the bpm - a track exactly as long as the animation ends with a final chord."""
+        return run(tools.add_sound, project, sprite, name, preset, wav_base64, seconds, tempo)
+
+    @mcp.tool()
+    def update_sprite(
+        project: str, sprite: str, x: float | None = None, y: float | None = None,
+        size: float | None = None, direction: float | None = None, visible: bool | None = None,
+        costume: str | None = None, new_name: str | None = None, rotation_style: str | None = None,
+        bring_to_front: bool = False,
+    ) -> str:
+        """Change a sprite's starting state: position, size (%), direction, visibility, current
+        costume (name or number), name, rotation style or layer. For the Stage only costume works."""
+        return run(tools.update_sprite, project, sprite, x, y, size, direction, visible, costume,
+                   new_name, rotation_style, bring_to_front)
+
+    @mcp.tool()
+    def remove_asset(project: str, sprite: str, kind: str, name: str) -> str:
+        """Remove one costume/backdrop (kind="costume") or sound (kind="sound") by name."""
+        return run(tools.remove_asset, project, sprite, kind, name)
+
+    @mcp.tool()
+    def delete_sprite(project: str, sprite: str) -> str:
+        """Delete a sprite, its scripts and any costume/sound files nothing else uses
+        (for example to drop the default cat from a new project)."""
+        return run(tools.delete_sprite, project, sprite)
+
+    register_groups(mcp, ctx)
     return mcp
 
 
