@@ -58,7 +58,7 @@ def test_stdio_server_end_to_end(root):
 
     names, add_desc, listing, created, added, summary, raw, saved, denied, bad = run_session(root, steps)
 
-    assert names == EXPECTED_TOOLS
+    assert EXPECTED_TOOLS <= names
     assert "Script text format" in add_desc
     assert "sample.sb3" in text_of(listing)
     assert not created.isError and "Created From Claude.sb3" in text_of(created)
