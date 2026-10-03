@@ -1,0 +1,107 @@
+{
+ "scenes": [
+  {
+   "n": 1,
+   "key": "title",
+   "backdrop": "sunrise",
+   "seconds": 11.5
+  },
+  {
+   "n": 2,
+   "key": "snowman",
+   "backdrop": "outside",
+   "seconds": 23.2
+  },
+  {
+   "n": 3,
+   "key": "arrival",
+   "backdrop": "outside",
+   "seconds": 33.0
+  },
+  {
+   "n": 4,
+   "key": "cocoa",
+   "backdrop": "inside_day",
+   "seconds": 31.1
+  },
+  {
+   "n": 5,
+   "key": "snowballs",
+   "backdrop": "evening",
+   "seconds": 24.2
+  },
+  {
+   "n": 6,
+   "key": "bedtime",
+   "backdrop": "inside_night",
+   "seconds": 27.8
+  },
+  {
+   "n": 7,
+   "key": "storm",
+   "backdrop": "storm",
+   "seconds": 9.5
+  },
+  {
+   "n": 8,
+   "key": "coldnight",
+   "backdrop": "inside_night",
+   "seconds": 25.2
+  },
+  {
+   "n": 9,
+   "key": "gift",
+   "backdrop": "inside_night",
+   "seconds": 20.3
+  },
+  {
+   "n": 10,
+   "key": "wakes",
+   "backdrop": "inside_night",
+   "seconds": 16.9
+  },
+  {
+   "n": 11,
+   "key": "sharing",
+   "backdrop": "inside_warm",
+   "seconds": 16.6
+  },
+  {
+   "n": 12,
+   "key": "morning",
+   "backdrop": "sunrise",
+   "seconds": 7.6
+  },
+  {
+   "n": 13,
+   "key": "dig",
+   "backdrop": "door",
+   "seconds": 21.8
+  },
+  {
+   "n": 14,
+   "key": "skating",
+   "backdrop": "rink",
+   "seconds": 20.9
+  },
+  {
+   "n": 15,
+   "key": "goodbye",
+   "backdrop": "outside",
+   "seconds": 28.7
+  },
+  {
+   "n": 16,
+   "key": "aurora",
+   "backdrop": "aurora",
+   "seconds": 8.8
+  },
+  {
+   "n": 17,
+   "key": "end",
+   "backdrop": "credits",
+   "seconds": 9.5
+  }
+ ],
+ "total_seconds": 336.6
+}
