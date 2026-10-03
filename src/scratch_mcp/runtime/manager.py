@@ -28,11 +28,24 @@ CHUNK_TIMEOUT = 25.0  # real seconds a chunk may take before the script is decla
 
 CLOCK_INIT = """
 (() => {
-  const real = {date: Date.now.bind(Date), perf: performance.now.bind(performance)};
-  const clock = window.__clock = {virtual: false, base: 0, ticks: 0, tickMs: 0.002};
+  const real = {date: Date.now.bind(Date), perf: performance.now.bind(performance),
+                st: window.setTimeout.bind(window), ct: window.clearTimeout.bind(window)};
+  const clock = window.__clock = {virtual: false, base: 0, ticks: 0, tickMs: 0.002, timers: [], seq: 1e9};
   const virt = () => clock.base + (clock.ticks++) * clock.tickMs;
   Date.now = () => clock.virtual ? virt() : real.date();
   performance.now = () => clock.virtual ? virt() : real.perf();
+  // Scratch uses setTimeout for 'say ... for N secs' etc.: while simulating, timers run on the simulated clock
+  window.setTimeout = (fn, ms, ...args) => {
+    if (!clock.virtual) return real.st(fn, ms, ...args);
+    const id = ++clock.seq; clock.timers.push({id, due: clock.base + (Number(ms) || 0), fn, args}); return id;
+  };
+  window.clearTimeout = id => { if (id >= 1e9) clock.timers = clock.timers.filter(t => t.id !== id); else real.ct(id); };
+  clock.fireDue = () => {
+    const due = clock.timers.filter(t => t.due <= clock.base).sort((a, b) => a.due - b.due);
+    clock.timers = clock.timers.filter(t => t.due > clock.base);
+    for (const t of due) { try { t.fn(...t.args); } catch (e) { console.error(e); } }
+    return due.length;
+  };
 })();
 """
 
@@ -105,14 +118,17 @@ class RuntimeManager:
                                  "or set SCRATCH_MCP_RUNTIME to a folder that already has scratch-vm.js and scratch-render.js.")
         d.mkdir(parents=True, exist_ok=True)
         (d / "package.json").write_text(json.dumps({"name": "scratch-mcp-runtime", "private": True, "version": "0.0.0"}))
-        cmd = [npm, "install", "--no-audit", "--no-fund", "--loglevel=error", f"scratch-vm@{SCRATCH_VM_VERSION}",
+        cmd = [npm, "install", "--no-audit", "--no-fund", "--loglevel=error", "--fetch-retries=1", "--fetch-timeout=45000",
+               f"scratch-vm@{SCRATCH_VM_VERSION}",
                f"scratch-render@{SCRATCH_RENDER_VERSION}"]
         proc = await asyncio.create_subprocess_exec(*cmd, cwd=str(d), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
         try:
-            out, _ = await asyncio.wait_for(proc.communicate(), timeout=600)
+            out, _ = await asyncio.wait_for(proc.communicate(), timeout=240)
         except asyncio.TimeoutError:
             proc.kill()
-            raise WorkspaceError("npm install timed out after 10 minutes.") from None
+            raise WorkspaceError("npm install timed out after 4 minutes - is the internet (or your proxy) reachable from this server? "
+                                 "MCP clients start servers with a minimal environment: put HTTPS_PROXY / SCRATCH_MCP_RUNTIME in the \"env\" "
+                                 "section of the server config, or install once by hand and point SCRATCH_MCP_RUNTIME at the folder.") from None
         if proc.returncode != 0:
             raise WorkspaceError(f"npm install failed:\n{out.decode(errors='replace')[-800:]}")
         nm = d / "node_modules"

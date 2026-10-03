@@ -37,7 +37,7 @@ def normalize_expect(e: dict[str, Any]) -> dict[str, Any]:
         a, b = e["touching"]
         return {"type": "touching", "a": a, "b": b, "value": e.get("value", True)}
     if "sound_played" in e:
-        return {"type": "count", "event": "sound_play", "arg": e["sound_played"], "op": e.get("op", ">="), "value": e.get("value", 1)}
+        return {"type": "count", "event": ["sound_play", "sound_playuntildone"], "arg": e["sound_played"], "op": e.get("op", ">="), "value": e.get("value", 1)}
     if "broadcast_sent" in e:
         return {"type": "count", "event": "event_broadcast", "arg": e["broadcast_sent"], "op": e.get("op", ">="), "value": e.get("value", 1)}
     if "costume_changed" in e:

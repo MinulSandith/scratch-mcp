@@ -438,3 +438,33 @@ def test_online_manager_with_mocked_network(game, tmp_path, monkeypatch):
     with pytest.raises(WorkspaceError, match="project_id must be"):
         run(game, O, "project_info", project_id="abc")
     assert not any("login" in u or "session" in u for u in urls)
+
+
+# ---------------------------------------------------------------- simulated time covers timers and blocking sounds
+
+def test_say_for_secs_and_sound_until_done_use_simulated_time(game):
+    run(game, "script_manager", "add_tree", sprite="Player", scripts=[
+        {"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "q"}, "next": [
+            {"opcode": "looks_sayforsecs", "inputs": {"MESSAGE": "hi", "SECS": 1}},
+            {"opcode": "data_setvariableto", "fields": {"VARIABLE": "score"}, "inputs": {"VALUE": 7}}]},
+        {"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "w"}, "next": [
+            {"opcode": "control_repeat", "inputs": {"TIMES": 5, "SUBSTACK": [{"opcode": "sound_playuntildone", "inputs": {"SOUND_MENU": "pop"}}]}},
+            {"opcode": "data_setvariableto", "fields": {"VARIABLE": "score"}, "inputs": {"VALUE": 9}}]}])
+    R, I = "runtime_manager", "input_manager"
+    out = arun(game, [
+        (R, "start", {"green_flag": True, "run_seconds": 0.2}),
+        (I, "key_press", {"key": "q", "hold_seconds": 0.05, "then_run": 0.4}),
+        (R, "sprite_state", {"sprite": "Player"}), (R, "variables", {}),
+        (R, "run", {"seconds": 0.8}),
+        (R, "sprite_state", {"sprite": "Player"}), (R, "variables", {}),
+        (I, "key_press", {"key": "w", "hold_seconds": 0.05, "then_run": 0}),
+        (R, "run", {"seconds": 5, "until": {"type": "variable", "name": "score", "op": "==", "value": 9}}),
+        (R, "events", {"type": "sound_playuntildone"}),
+        (R, "state", {}),
+    ])
+    early, early_vars, late, late_vars, snd = out[2], out[3], out[5], out[6], out[8]
+    assert early["say"]["text"] == "hi" and {v["name"]: v["value"] for v in early_vars["variables"]}["score"] in (0, "0")
+    assert late["say"] is None and {v["name"]: v["value"] for v in late_vars["variables"]}["score"] in (7, "7")
+    assert snd["condition_met"] and 0.55 < snd["ran_seconds"] < 1.0, snd["ran_seconds"]      # 5 x 0.14 s of sound
+    assert out[9]["total"] == 5
+    assert out[10]["time"] > 0 and out[10]["time"] < 20       # the project timer follows the simulated clock

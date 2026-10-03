@@ -53,7 +53,6 @@ const sm = window.sm = {
 
   async boot(b64, opts) {
     opts = opts || {};
-    window.__clock.virtual = true; window.__clock.base = 1.7e12; window.__clock.ticks = 0;
     this.events = []; this.started = new Set(); this.frames = 0; this.question = null; this.askQueue = []; this.errors = []; this.said = {};
     const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     const vm = this.vm = new VirtualMachine();
@@ -65,7 +64,7 @@ const sm = window.sm = {
     vm.runtime.currentStepTime = this.frameMs;
     await vm.loadProject(bin.buffer);
     const rt = vm.runtime;
-    rt.on('SAY', (target, type, text) => { this.said[target.getName ? target.getName() : target.sprite.name] = {type, text}; if (text) this.log('say', {sprite: target.sprite ? target.sprite.name : 'Stage', text: String(text), kind: type}); });
+    window.__clock.timers = []; window.__clock.base = Date.now(); window.__clock.ticks = 0; window.__clock.virtual = true;  // continue from the real time so nothing jumps
     rt.on('QUESTION', q => { this.question = q; });
     rt.on('PROJECT_STOP_ALL', () => { this.askQueue = []; });
     const pushThread = rt._pushThread.bind(rt);   // every script start, for every sprite and clone
@@ -84,6 +83,11 @@ const sm = window.sm = {
           for (const [k, v] of Object.entries(args || {})) summary[k] = (v && typeof v === 'object') ? (v.name !== undefined ? v.name : JSON.stringify(v).slice(0, 80)) : v;
           this.log(op, {sprite, clone: !!clone, args: summary});
         } catch (e) { /* logging must never break the project */ }
+        if (op === 'sound_playuntildone') {
+          const name = args && args.SOUND_MENU && typeof args.SOUND_MENU === 'object' ? args.SOUND_MENU.name : (args || {}).SOUND_MENU;
+          const snd = util && util.target && util.target.sprite.sounds.find(x => x.name === name || String(x.soundId) === String(name));
+          if (snd && snd.sampleCount && snd.rate) return new Promise(res => setTimeout(res, 1000 * snd.sampleCount / snd.rate));
+        }
         if (op === 'sensing_askandwait') {
           const q = {text: String(args.QUESTION)};
           this.askQueue.push(q);
@@ -108,22 +112,26 @@ const sm = window.sm = {
   flag() { this.vm.greenFlag(); this.log('green_flag', {}); },
   stopAll() { this.vm.stopAll(); this.log('stop_all', {}); },
 
-  advance(frames, ms) {
+  // Advance `frames` frames of simulated time. Between frames: fire due simulated timers, then let promise-based
+  // blocks resume (microtasks) - the VM only resumes 'wait for promise' threads between JavaScript tasks.
+  async advance(frames, ms) {
     const rt = this.vm.runtime, c = window.__clock;
     for (let i = 0; i < frames; i++) {
       const target = c.base + (ms || this.frameMs);
       c.base = Math.max(target, c.base + c.ticks * c.tickMs);
       c.ticks = 0;
+      c.fireDue();
+      for (let k = 0; k < 6; k++) await Promise.resolve();
       rt._step();
       this.frames++;
     }
   },
 
   // run up to `frames` frames, stopping early when `until` (condition) holds. Returns {frames, met, actual}.
-  run(frames, ms, until) {
+  async run(frames, ms, until) {
     let done = 0, last = null;
     while (done < frames) {
-      this.advance(1, ms); done++;
+      await this.advance(1, ms); done++;
       if (until) { last = this.check(until); if (last.ok) return {frames: done, met: true, actual: last.actual}; }
     }
     return {frames: done, met: until ? false : null, actual: last ? last.actual : null};
@@ -152,6 +160,11 @@ const sm = window.sm = {
     if (!t) throw new Error(`No sprite named '${name}'`);
     return t;
   },
+  // the speech/thought bubble a sprite is showing right now (the VM keeps it on the target)
+  sayOf(t) {
+    const st = t.getCustomState('Scratch.looks');
+    return st && st.text ? {type: st.type, text: String(st.text)} : null;
+  },
   targetInfo(t) {
     const info = {name: t.getName(), isStage: t.isStage, clone: !t.isOriginal, id: t.id};
     const cs = t.getCostumes()[t.currentCostume];
@@ -161,8 +174,7 @@ const sm = window.sm = {
     Object.assign(info, {x: +t.x.toFixed(2), y: +t.y.toFixed(2), size: +t.size.toFixed(2), direction: +t.direction.toFixed(2),
       visible: t.visible, draggable: t.draggable, rotationStyle: t.rotationStyle,
       effects: Object.fromEntries(Object.entries(t.effects).filter(([k, v]) => v))});
-    const said = this.said[t.getName()];
-    info.say = said && said.text ? said : null;
+    info.say = this.sayOf(t);
     return info;
   },
   variables() {
@@ -265,7 +277,7 @@ const sm = window.sm = {
     if (type === 'sprite') {
       const t = this.target(c.sprite);
       let actual;
-      if (c.property === 'say') { const s = this.said[c.sprite]; actual = s && s.text ? s.text : ''; }
+      if (c.property === 'say') { const s = this.sayOf(t); actual = s ? s.text : ''; }
       else if (c.property === 'costume') actual = t.getCostumes()[t.currentCostume].name;
       else actual = t[c.property === 'direction' ? 'direction' : c.property];
       return {ok: this.cmp(c.op || '==', actual, c.value), actual};
@@ -276,7 +288,8 @@ const sm = window.sm = {
       return {ok: actual === (c.value !== false), actual};
     }
     if (type === 'count') {
-      const evs = this.events.filter(e => e.type === c.event && (!c.sprite || e.sprite === c.sprite) &&
+      const kinds = Array.isArray(c.event) ? c.event : [c.event];
+      const evs = this.events.filter(e => kinds.includes(e.type) && (!c.sprite || e.sprite === c.sprite) &&
         (!c.arg || Object.values(e.args || {}).some(v => String(v).toLowerCase() === String(c.arg).toLowerCase())));
       return {ok: this.cmp(c.op || '>=', evs.length, c.value === undefined ? 1 : c.value), actual: evs.length};
     }
@@ -299,8 +312,8 @@ const sm = window.sm = {
   // -------------------------------------------------------------------------- picture
   draw() { this.renderer.draw(); return true; },
   // advance one frame and return the stage as a JPEG (base64) - used for video capture
-  shoot(ms, quality) {
-    this.advance(1, ms);
+  async shoot(ms, quality) {
+    await this.advance(1, ms);
     this.renderer.draw();
     return document.getElementById('stage').toDataURL('image/jpeg', quality || 0.95).split(',')[1];
   },

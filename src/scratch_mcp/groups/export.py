@@ -172,6 +172,7 @@ def _mix_audio(project: dict[str, Any], assets: dict[str, bytes], events: list[d
     buf = [0.0] * total
     used = 0
     stops = sorted(e["t"] for e in events if e["type"] == "sound_stopallsounds")
+    cache: dict[str, list[int]] = {}
     for e in events:
         if e["type"] not in ("sound_play", "sound_playuntildone"):
             continue
@@ -180,12 +181,15 @@ def _mix_audio(project: dict[str, Any], assets: dict[str, bytes], events: list[d
         entry = next((x for x in (t or {}).get("sounds") or [] if x["name"] == name), None)
         if entry is None or entry.get("dataFormat") != "wav":
             continue
-        try:
-            pcm = audio.decode(assets[entry["md5ext"]])
-        except WorkspaceError:
-            continue
-        pcm = audio.resample(pcm, rate) if pcm.rate != rate else pcm
-        mono = [sum(c[i] for c in pcm.data) // pcm.channels for i in range(pcm.frames)] if pcm.channels > 1 else pcm.data[0]
+        mono = cache.get(entry["md5ext"])
+        if mono is None:  # decode + resample each distinct sound once
+            try:
+                pcm = audio.decode(assets[entry["md5ext"]])
+            except WorkspaceError:
+                continue
+            pcm = audio.resample(pcm, rate) if pcm.rate != rate else pcm
+            mono = [sum(c[i] for c in pcm.data) // pcm.channels for i in range(pcm.frames)] if pcm.channels > 1 else pcm.data[0]
+            cache[entry["md5ext"]] = mono
         start = int(e["t"] * rate)
         cut = next((int(s * rate) for s in stops if s > e["t"]), None)
         for i, v in enumerate(mono):
