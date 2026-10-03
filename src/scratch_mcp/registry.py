@@ -167,7 +167,16 @@ async def dispatch(group: str, ctx: Any, action_name: str, args: dict[str, Any] 
         ps = ", ".join(f"{n}{'*' if req else ''}: {t}" for n, t, req, _ in act.params)
         raise WorkspaceError(f"Invalid args for {group}.{act.name}: {problems}. Expected: {ps or 'no arguments'}") from exc
     kwargs = {name: getattr(parsed, name) for name in act.model.model_fields}
+    store = getattr(ctx, "store", None)
+    if store is not None:
+        store.backup_events.clear()
     result = act.fn(ctx, **kwargs)
     if inspect.isawaitable(result):
         result = await result
+    if store is not None and store.backup_events:
+        made = list(store.backup_events)
+        if isinstance(result, dict):
+            result = {**result, "backups_made": made}
+        elif isinstance(result, Reply) and isinstance(result.text, dict):
+            result.text = {**result.text, "backups_made": made}
     return result

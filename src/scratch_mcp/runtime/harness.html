@@ -222,6 +222,7 @@ const sm = window.sm = {
     return rt.threads.filter(t => !t.isKilled).map(t => ({sprite: t.target.isStage ? 'Stage' : t.target.sprite.name, clone: !t.target.isOriginal,
       top_block: t.topBlock, opcode: (t.target.blocks.getBlock(t.topBlock) || {}).opcode, status: t.status}));
   },
+  loadedExtensions() { return Array.from(this.vm.extensionManager._loadedExtensions.keys()); },
   scriptsStarted() { return Array.from(this.started); },
   eventsSince(sinceFrame, type, limit) {
     const out = this.events.filter(e => e.frame >= sinceFrame && (!type || e.type === type));
@@ -297,6 +298,12 @@ const sm = window.sm = {
 
   // -------------------------------------------------------------------------- picture
   draw() { this.renderer.draw(); return true; },
+  // advance one frame and return the stage as a JPEG (base64) - used for video capture
+  shoot(ms, quality) {
+    this.advance(1, ms);
+    this.renderer.draw();
+    return document.getElementById('stage').toDataURL('image/jpeg', quality || 0.95).split(',')[1];
+  },
   setResolution(scale) {
     const canvas = document.getElementById('stage');
     this.renderer.resize(480 * scale, 360 * scale);

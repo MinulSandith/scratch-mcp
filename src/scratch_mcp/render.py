@@ -242,6 +242,10 @@ def top_level_scripts(target: dict[str, Any]) -> list[tuple[str, dict[str, Any]]
     return tops
 
 
+def top_level_ids(target: dict[str, Any]) -> list[str]:
+    return [bid for bid, _ in top_level_scripts(target)]
+
+
 def render_target_scripts(target: dict[str, Any]) -> list[str]:
     blocks = target.get("blocks") or {}
     renderer = ScriptRenderer(blocks)

@@ -78,6 +78,42 @@ class BrowserService:
         finally:
             await ctx.close()
 
+    async def diff_images(self, png_a: bytes, png_b: bytes, threshold: int = 24) -> tuple[dict, bytes]:
+        """Compare two PNGs of the same size. Returns (stats, diff image: changed pixels in red over the faded second image)."""
+        b = await self.browser()
+        page = await b.new_page()
+        try:
+            js = """async ([a, b, thr]) => {
+              const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+              const A = await load('data:image/png;base64,' + a), B = await load('data:image/png;base64,' + b);
+              if (A.width !== B.width || A.height !== B.height) return {error: `size differs: ${A.width}x${A.height} vs ${B.width}x${B.height}`};
+              const w = A.width, h = A.height;
+              const get = img => { const c = document.createElement('canvas'); c.width = w; c.height = h;
+                const x = c.getContext('2d', {willReadFrequently: true}); x.drawImage(img, 0, 0); return x.getImageData(0, 0, w, h); };
+              const da = get(A), db = get(B);
+              const out = document.createElement('canvas'); out.width = w; out.height = h;
+              const ox = out.getContext('2d'); const od = ox.createImageData(w, h);
+              let changed = 0, minx = w, miny = h, maxx = -1, maxy = -1;
+              for (let i = 0; i < da.data.length; i += 4) {
+                const d = Math.abs(da.data[i] - db.data[i]) + Math.abs(da.data[i+1] - db.data[i+1]) + Math.abs(da.data[i+2] - db.data[i+2]);
+                const px = (i / 4) % w, py = Math.floor(i / 4 / w);
+                if (d > thr) { changed++; od.data[i] = 255; od.data[i+1] = 0; od.data[i+2] = 0; od.data[i+3] = 255;
+                  if (px < minx) minx = px; if (px > maxx) maxx = px; if (py < miny) miny = py; if (py > maxy) maxy = py; }
+                else { od.data[i] = db.data[i]; od.data[i+1] = db.data[i+1]; od.data[i+2] = db.data[i+2]; od.data[i+3] = 70; }
+              }
+              ox.putImageData(od, 0, 0);
+              return {width: w, height: h, changed, pct: +(100 * changed / (w * h)).toFixed(3),
+                      bbox: changed ? {x: minx, y: miny, width: maxx - minx + 1, height: maxy - miny + 1} : null,
+                      png: out.toDataURL('image/png').split(',')[1]};
+            }"""
+            r = await page.evaluate(js, [base64.b64encode(png_a).decode(), base64.b64encode(png_b).decode(), threshold])
+        finally:
+            await page.close()
+        if "error" in r:
+            raise WorkspaceError("Can't compare: " + r["error"])
+        png = base64.b64decode(r.pop("png"))
+        return r, png
+
     async def close(self) -> None:
         if self._browser is not None:
             await self._browser.close()

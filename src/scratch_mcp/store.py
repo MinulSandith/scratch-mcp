@@ -89,6 +89,7 @@ class ProjectStore:
     def __init__(self, ws: Workspace, backup_keep: int | None = None):
         self.ws = ws
         self.sessions: dict[str, Session] = {}
+        self.backup_events: list[str] = []  # backups made since the list was last cleared (reported to the caller)
         self.active: str | None = None
         self.backup_keep = backup_keep if backup_keep is not None else int(os.environ.get("SCRATCH_MCP_BACKUPS", "100"))
 
@@ -186,6 +187,7 @@ class ProjectStore:
         backup = self.ws.write(target, Sb3(session.project, session.assets), overwrite=True) if target.exists() \
             else self.ws.write(target, Sb3(session.project, session.assets), overwrite=False)
         if backup:
+            self.backup_events.append(self.ws.display(backup))
             self.ws.prune_backups(target, self.backup_keep)
         if target == session.path:
             session.dirty = False

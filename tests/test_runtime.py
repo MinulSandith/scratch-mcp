@@ -297,3 +297,144 @@ def test_ask_scenario_and_conditions(game):
     assert body["passed"], [x["detail"] for x in body["steps"] if not x["ok"]]
     with pytest.raises(WorkspaceError, match="Can't understand"):
         run(game, T, "define", name="bad", steps=[{"expect": {"banana": 1}}])
+
+
+# ---------------------------------------------------------------- extensions, inspection, export, online
+
+def test_pen_extension_draws_and_snapshot_compare(game):
+    E, R = "extension_manager", "runtime_manager"
+    run(game, "script_manager", "add_tree", sprite="Spawner", scripts=[{"opcode": "event_whenkeypressed", "fields": {"KEY_OPTION": "p"}, "next": [
+        {"opcode": "motion_gotoxy", "inputs": {"X": -150, "Y": 100}},
+        {"opcode": "pen_setPenColorToColor", "inputs": {"COLOR": "#ff0000"}},
+        {"opcode": "pen_setPenSizeTo", "inputs": {"SIZE": 8}},
+        {"opcode": "pen_penDown"},
+        {"opcode": "motion_gotoxy", "inputs": {"X": 150, "Y": 100}},
+        {"opcode": "pen_penUp"}]}])
+    listing = {e["id"]: e for e in run(game, E, "list")["extensions"]}
+    assert listing["pen"]["enabled"] and listing["pen"]["blocks_used"] == 4 and listing["microbit"]["hardware"]
+    out = arun(game, [(R, "start", {"green_flag": True, "run_seconds": 0.3}), (R, "snapshot", {"name": "before"}),
+                      ("input_manager", "key_press", {"key": "p", "then_run": 0.5}),
+                      (R, "compare", {"against": "before"}), (R, "screenshot", {}), (E, "verify", {})])
+    cmp_, shot, ver = out[3], out[4], out[5]
+    assert cmp_.text["changed"] > 300 and cmp_.text["bbox"]["width"] > 250 and not cmp_.text["identical"]   # a long red line appeared
+    assert cmp_.images[0][0][:4] == b"\x89PNG"
+    assert ver["all_loaded"] and "pen" in ver["loaded_in_vm"] and ver["runtime_errors"] == []
+    with pytest.raises(WorkspaceError, match="in use"):
+        run(game, E, "disable", extension="pen")
+    assert run(game, E, "disable", extension="pen", remove_blocks=True)["blocks_removed"] >= 4
+    assert "pen" not in run(game, "project_manager", "info")["extensions"]
+    assert run(game, "debug_manager", "check", include_info=False)["ok"]
+    desc = run(game, E, "describe", extension="music")
+    assert any(b["opcode"] == "music_playNoteForBeats" for b in desc["blocks"]) and desc["runtime_support"] == "logic only"
+    assert "hardware connectivity is not supported" in run(game, E, "enable", extension="microbit")["warning"]
+    with pytest.raises(WorkspaceError, match="Unknown extension"):
+        run(game, E, "enable", extension="spike")
+
+
+def test_inspection_views(game):
+    I = "inspection_manager"
+    ov = run(game, I, "overview")
+    assert [s["name"] for s in ov["sprites"]] == ["Player", "Coin", "Spawner"] and ov["stage"]["is_stage"]
+    player = ov["sprites"][0]
+    assert player["script_starts"]["event_whenflagclicked"] == 1 and player["script_starts"]["event_whenkeypressed"] == 2
+    assert "score" in [v["name"] for v in ov["global_variables"]] and ov["total_blocks"] >= 40
+    assert run(game, I, "component", kind="scripts", sprite="Coin")["scripts"][0]["text"].startswith("when flag clicked")
+    assert run(game, I, "component", kind="costumes", sprite="Player")["costumes"][0]["name"] == "idle"
+    found = run(game, I, "find_blocks", opcode="data_*", text="score")
+    assert {m["sprite"] for m in found["matches"]} == {"Player", "Coin"}
+    assert run(game, I, "find_blocks", field_value="jump")["matches"]
+    refs = run(game, I, "references", kind="variable", name="score")
+    assert refs["uses"] >= 2 and run(game, I, "references", kind="sprite", name="Player")["uses"] == 1
+    assert run(game, I, "references", kind="sound", name="pop")["uses"] == 1
+    top = run(game, "script_manager", "list_scripts", sprite="Coin")["scripts"][0]["id"]
+    g = run(game, I, "block_graph", sprite="Coin", script=top)
+    assert any(n["opcode"] == "control_forever" and n["inputs"].get("SUBSTACK") for n in g["nodes"].values())
+    assert run(game, I, "json", section="targets[0].costumes")["json"].count("backdrop") >= 0
+    assert run(game, I, "json", section="meta")["truncated"] is False
+    with pytest.raises(WorkspaceError, match="Nothing at"):
+        run(game, I, "json", section="targets[99]")
+    with pytest.raises(WorkspaceError):
+        run(game, I, "component", kind="nonsense")
+    raw = run(game, "project_manager", "save_json", project_json=run(game, I, "json")["json"])
+    assert raw["saved"] == "game.sb3"
+    with pytest.raises(WorkspaceError, match="Not saved"):
+        run(game, "project_manager", "save_json", project_json="{not json")
+
+
+def test_exports_are_verified_and_video_is_real(game):
+    X = "export_manager"
+    out = arun(game, [(X, "sb3", {"name": "game-v1"}), (X, "verify", {"path": "exports/game-v1.sb3"})])
+    exp, ver = out
+    assert exp["ok"] and exp["loads_in_scratch_vm"] is True and exp["summary"]["sprites"] == ["Coin", "Player", "Spawner"]
+    assert ver["ok"]
+    with pytest.raises(WorkspaceError, match="already exists"):
+        run(game, X, "sb3", name="game-v1")
+    sp = run(game, X, "sprite", sprite="Player")
+    assert sp["exported_to"] == "exports/Player.sprite3" and sp["reimport_ok"] and "global" in sp["note"]
+    assert run(game, X, "costume", sprite="Player", costume="happy")["exported_to"].endswith(".svg")
+    assert run(game, X, "sound", sprite="Player", sound="pop")["exported_to"].endswith(".wav")
+    # a damaged export is reported, not trusted
+    import zipfile
+
+    src = game.ws.root / "exports" / "game-v1.sb3"
+    bad = game.ws.root / "exports" / "broken.sb3"
+    with zipfile.ZipFile(src) as zin, zipfile.ZipFile(bad, "w") as zout:
+        dropped = False
+        for item in zin.infolist():
+            if item.filename.endswith(".svg") and not dropped:
+                dropped = True
+                continue
+            zout.writestr(item, zin.read(item.filename))
+    assert arun(game, [(X, "verify", {"path": "exports/broken.sb3"})])[0]["ok"] is False
+    shot = arun(game, [(X, "screenshot", {"name": "frame"})])[0]
+    assert (game.ws.root / shot.text["saved_to"]).exists()
+    if not shutil.which("ffmpeg"):
+        pytest.skip("ffmpeg not installed")
+    v = arun(game, [(X, "video", {"seconds": 3, "name": "clip", "inputs": [{"at": 1.0, "key": "space"}]})])[0]
+    assert v["verified"]["width"] == 480 and v["verified"]["height"] == 360
+    assert abs(v["verified"]["video_seconds"] - 3.0) < 0.2 and v["verified"]["frames"] in range(88, 93)
+    assert v["has_audio"] and v["verified"]["audio_stream"] and v["sound_effects_mixed"] == 1 and v["inputs_applied"] == 1
+    assert (game.ws.root / "exports" / "clip.mp4").stat().st_size > 5000
+
+
+def test_online_manager_with_mocked_network(game, tmp_path, monkeypatch):
+    import hashlib
+    import json as _json
+
+    from scratch_mcp.library import Library
+
+    monkeypatch.setenv("SCRATCH_MCP_CACHE", str(tmp_path / "cache"))
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>'
+    md5 = hashlib.md5(svg).hexdigest()
+    project = {"targets": [
+        {"isStage": True, "name": "Stage", "variables": {}, "lists": {}, "broadcasts": {}, "blocks": {}, "comments": {}, "currentCostume": 0,
+         "costumes": [{"assetId": md5, "name": "b", "md5ext": md5 + ".svg", "dataFormat": "svg", "rotationCenterX": 5, "rotationCenterY": 5}],
+         "sounds": [], "volume": 100, "layerOrder": 0, "tempo": 60},
+        {"isStage": False, "name": "Sprite1", "variables": {}, "lists": {}, "broadcasts": {}, "blocks": {}, "comments": {}, "currentCostume": 0,
+         "costumes": [{"assetId": md5, "name": "c", "md5ext": md5 + ".svg", "dataFormat": "svg", "rotationCenterX": 5, "rotationCenterY": 5}],
+         "sounds": [], "volume": 100, "layerOrder": 1, "visible": True, "x": 0, "y": 0, "size": 100, "direction": 90, "draggable": False,
+         "rotationStyle": "all around"}], "monitors": [], "extensions": [], "meta": {"semver": "3.0.0", "vm": "1", "agent": "x"}}
+    urls = []
+
+    def fake(url):
+        urls.append(url)
+        if url == "https://api.scratch.mit.edu/projects/123":
+            return _json.dumps({"id": 123, "title": "Cool", "author": {"username": "someone"}, "project_token": "tok", "instructions": "Press keys",
+                                "public": True, "stats": {"views": 1}}).encode()
+        if url == "https://projects.scratch.mit.edu/123?token=tok":
+            return _json.dumps(project).encode()
+        if url.endswith(md5 + ".svg/get/"):
+            return svg
+        raise AssertionError(url)
+
+    game.library = Library(fake)
+    O = "online_manager"
+    assert "log in" in " ".join(run(game, O, "capabilities")["not_supported"])
+    info = run(game, O, "project_info", project_id="https://scratch.mit.edu/projects/123/")
+    assert info["title"] == "Cool" and info["author"] == "someone"
+    got = run(game, O, "import_project", project_id="123", name="cool")
+    assert got["imported"] == "cool.sb3" and got["sprites"] == ["Sprite1"] and got["asset_files"] == 1
+    assert run(game, "project_manager", "info")["project"] == "cool.sb3"
+    with pytest.raises(WorkspaceError, match="project_id must be"):
+        run(game, O, "project_info", project_id="abc")
+    assert not any("login" in u or "session" in u for u in urls)

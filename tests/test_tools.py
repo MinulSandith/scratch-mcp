@@ -13,13 +13,15 @@ from .conftest import read_sb3, target
 
 def test_list_projects(tools, root):
     out = tools.list_projects()
-    assert "1 project(s)" in out and "sample.sb3" in out
+    assert [p["project"] for p in out["projects"]] == ["sample.sb3"]
 
 
 def test_list_projects_empty(tmp_path):
-    from scratch_mcp.server import ScratchTools
+    from scratch_mcp.ctx import Ctx
 
-    assert "No .sb3 projects" in ScratchTools(tmp_path / "empty").list_projects()
+    from .conftest import Tools
+
+    assert Tools(Ctx(tmp_path / "empty")).list_projects()["projects"] == []
 
 
 def test_read_project_summary(tools):
@@ -75,7 +77,7 @@ def test_save_valid_edit_creates_backup_and_keeps_assets(tools, root):
 
     out = tools.save_project_json("sample", json.dumps(project))
 
-    assert "Saved sample.sb3" in out and "backed up to backups/sample." in out
+    assert out["saved"] == "sample.sb3" and out["backups_made"][0].startswith("backups/sample.")
     saved, assets = read_sb3(root / "sample.sb3")
     assert target(saved, "Kitty")["x"] == -150
     assert assets == {"83a9787d4cb6f3b7632b4ddfebf74367.wav", "83c36d806dc92327b9e7049a565c6bff.wav",
@@ -147,7 +149,7 @@ def test_save_requires_existing_project(tools):
 
 def test_create_project_has_cat_and_is_valid(tools, root):
     out = tools.create_project("My Game", sprite_name="Hero")
-    assert "Created My Game.sb3" in out
+    assert out["created"] == "My Game.sb3"
     project, assets = read_sb3(root / "My Game.sb3")
     stage, hero = project["targets"]
     assert stage["isStage"] and hero["name"] == "Hero"
@@ -171,4 +173,4 @@ def test_create_project_never_overwrites(tools, root):
 def test_create_project_in_subfolder(tools, root):
     tools.create_project("class/week1")
     assert (root / "class" / "week1.sb3").is_file()
-    assert "class/week1.sb3" in tools.list_projects()
+    assert "class/week1.sb3" in [p["project"] for p in tools.list_projects()["projects"]]

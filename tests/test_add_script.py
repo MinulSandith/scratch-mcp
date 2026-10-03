@@ -173,10 +173,9 @@ set [speed v] to (0)
 change [lives v] by (-1)
 add (lives) to [history v]
 broadcast [restart v]""")
-    assert "Created variables (for all sprites): lives" in out
-    assert "Created lists (for all sprites): history" in out
-    assert "Created broadcast messages: restart" in out
-    assert "game over" not in out.split("Created broadcast")[1]  # reused, case-insensitive
+    assert "created variables: lives" in out["notes"]
+    assert "created lists: history" in out["notes"]
+    assert "created broadcasts: restart" in out["notes"]  # 'Game Over' already existed (reused, case-insensitive)
     data, assets = read_sb3(root / "sample.sb3")
     assert validate_project(data, assets).ok
     stage, ball = target(data, "Stage"), target(data, "Ball")
@@ -267,7 +266,7 @@ def test_new_script_placed_below_existing(blank):
 def test_success_makes_backup(tools, root):
     before = (root / "sample.sb3").read_bytes()
     out = tools.add_script("sample", "Cat", "when flag clicked\nshow")
-    assert "backed up to backups/sample." in out
+    assert out["backups_made"][0].startswith("backups/sample.")
     (backup,) = (root / "backups").glob("sample.*.sb3")
     assert backup.read_bytes() == before
 
@@ -315,7 +314,7 @@ def test_parse_errors_are_reported_and_nothing_saved(blank, script, message):
 def test_errors_include_line_numbers_and_syntax_help(blank):
     with pytest.raises(WorkspaceError) as exc:
         blank.add_script("blank", "Sprite1", "when flag clicked\njump around")
-    assert "Line 2" in str(exc.value) and "Script text format" in str(exc.value)
+    assert "Line 2" in str(exc.value) and "Text syntax" in str(exc.value)
 
 
 def test_sprite_only_blocks_rejected_on_stage(blank):

@@ -254,3 +254,32 @@ async def console(ctx: Ctx, project: str | None = None, errors_only: bool = True
         raise WorkspaceError("The project is not running.")
     items = [c for c in rs.console if not errors_only or c["type"] in ("error", "pageerror")]
     return {"messages": items[-last:], "total": len(items), "runtime_stopped": rs.dead}
+
+
+_snapshots: dict[str, dict[str, bytes]] = {}
+
+
+@action(G)
+async def snapshot(ctx: Ctx, name: str, project: str | None = None) -> dict:
+    """Remember the current stage picture under a name, to compare with later (before/after an edit or a run)."""
+    session, rm = await ensure(ctx, project)
+    _snapshots.setdefault(session.name, {})[name] = await rm.screenshot(session.name, 1)
+    return {"saved": name, "snapshots": list(_snapshots[session.name])}
+
+
+@action(G)
+async def compare(ctx: Ctx, against: str, project: str | None = None, threshold: int = 24) -> Reply:
+    """Compare the current stage with a saved snapshot. Returns how much changed (percent of pixels, bounding box) and a diff image with the changed pixels in red.
+
+    Args:
+        against: snapshot name from 'snapshot'.
+        threshold: colour difference (0-765) above which a pixel counts as changed.
+    """
+    session, rm = await ensure(ctx, project)
+    before = _snapshots.get(session.name, {}).get(against)
+    if before is None:
+        raise WorkspaceError(f"No snapshot '{against}'. Saved: {list(_snapshots.get(session.name, {})) or 'none'}.")
+    now = await rm.screenshot(session.name, 1)
+    stats, diff = await ctx.browser.diff_images(before, now, threshold)
+    stats["identical"] = stats["changed"] == 0
+    return Reply(text=stats, images=[(diff, "image/png")])

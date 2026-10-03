@@ -273,3 +273,29 @@ def validate(ctx: Ctx, project: str | None = None) -> dict:
     s = ctx.session(project)
     r = validate_project(s.project, set(s.assets))
     return {"ok": r.ok, "errors": r.errors, "warnings": r.warnings}
+
+
+@action(G)
+def save_json(ctx: Ctx, project_json: str | dict[str, Any], project: str | None = None) -> dict:
+    """Replace the project's whole project.json with an edited version (validated first: valid JSON, unique block ids, consistent parent/next/input links, known opcodes, costume/sound files present). Nothing changes if validation fails. Costume/sound files already in the project are kept.
+
+    Args:
+        project_json: the full project.json as text or an object.
+    """
+    import copy
+
+    from ..validate import parse_project_json
+
+    if isinstance(project_json, str):
+        try:
+            data = parse_project_json(project_json)
+        except ValueError as exc:
+            raise WorkspaceError(f"Not saved. {exc}") from exc
+    else:
+        data = copy.deepcopy(project_json)
+    session = ctx.session(project)
+    with ctx.store.edit(project, "replace project.json") as h:
+        h.project.clear()
+        h.project.update(data)
+    r = validate_project(session.project, set(session.assets))
+    return {"saved": session.name, "warnings": r.warnings[:20]}
