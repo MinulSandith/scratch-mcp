@@ -45,7 +45,7 @@ def ctx(root: Path):
     return Ctx(root)
 
 
-def call(ctx, group: str, action: str, **args):
+def call(ctx, group: str, action: str, /, **args):
     """Run an action the way the MCP tool does; returns the handler's result (raises on error)."""
     import anyio
 

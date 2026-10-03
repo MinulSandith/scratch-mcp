@@ -29,9 +29,10 @@ from typing import Any
 from . import schema
 from .schema import (BROADCAST_CODE, LIST_CODE, NUMERIC_SHADOWS, PRIMITIVE_CODE, VARIABLE_CODE)
 from .textparse import make_id_factory
+from .workspace import WorkspaceError
 
 
-class EngineError(ValueError):
+class EngineError(WorkspaceError):
     """User-facing problem with a block operation."""
 
 

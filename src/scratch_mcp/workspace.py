@@ -63,6 +63,20 @@ class Workspace:
             raise WorkspaceError(f"Project not found: {self.display(resolved)}")
         return resolved
 
+    def resolve_file(self, name: str | None, *, must_exist: bool = True) -> Path:
+        """Any file (not only .sb3) inside the projects folder - never outside, never in backups/."""
+        if not name or not str(name).strip():
+            raise WorkspaceError("File path is empty.")
+        candidate = Path(str(name).strip()).expanduser()
+        if not candidate.is_absolute():
+            candidate = self.root / candidate
+        resolved = candidate.resolve()
+        if not resolved.is_relative_to(self.root) or resolved == self.root:
+            raise WorkspaceError(f"Access denied: '{name}' is outside the Scratch projects folder ({self.root}).")
+        if must_exist and not resolved.is_file():
+            raise WorkspaceError(f"File not found: {self.display(resolved)}")
+        return resolved
+
     def display(self, path: Path) -> str:
         return path.relative_to(self.root).as_posix()
 

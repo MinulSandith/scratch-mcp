@@ -44,8 +44,8 @@ def project_info(session: Session) -> dict[str, Any]:
     }
 
 
-@action(G)
-def list(ctx: Ctx) -> dict:
+@action(G, "list")
+def list_all(ctx: Ctx) -> dict:
     """List .sb3 projects in the folder (subfolders included, backups excluded) with open/dirty state."""
     rows = []
     for path in ctx.ws.list_projects():
@@ -76,8 +76,8 @@ def create(ctx: Ctx, name: str, sprite_name: str = "Sprite1", empty: bool = Fals
     return {"created": session.name, **project_info(session)}
 
 
-@action(G)
-def open(ctx: Ctx, name: str, reload: bool = False) -> dict:
+@action(G, "open")
+def open_project(ctx: Ctx, name: str, reload: bool = False) -> dict:
     """Open a project (load it into memory) and make it the active project.
 
     Args:

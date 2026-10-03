@@ -14,6 +14,16 @@ class Ctx:
         self.ws = Workspace(root)
         self.store = ProjectStore(self.ws)
         self._runtime: Any = None
+        self._browser: Any = None
+        self.clipboard: list[str] = []  # copied vector elements (costume_manager copy/paste)
+
+    @property
+    def browser(self):
+        if self._browser is None:
+            from .runtime.browser import BrowserService
+
+            self._browser = BrowserService()
+        return self._browser
 
     @property
     def runtime(self):

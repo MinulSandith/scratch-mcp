@@ -21,6 +21,7 @@ import secrets
 from dataclasses import dataclass, field
 from typing import Any
 
+from .workspace import WorkspaceError
 from .blocks import (
     BOOLEAN, BROADCAST, C, C_CAP, CAP, COLOR_PICKER, HAT, KIND_TO_PRIMITIVE,
     LIST, MENUS, PARSE_SPECS, REPORTER, SPECS, SPRITE_ONLY_OPCODES, STAGE_ONLY_OPCODES,
@@ -36,7 +37,7 @@ _NUMBER_KINDS = {"num", "pos", "whole", "int", "angle", "note"}
 _ID_SOUP = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 
-class ParseError(ValueError):
+class ParseError(WorkspaceError):
     def __init__(self, message: str, line: int | None = None):
         self.line = line
         super().__init__(f"Line {line}: {message}" if line else message)
