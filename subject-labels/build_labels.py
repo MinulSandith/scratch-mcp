@@ -61,6 +61,15 @@ SUBJECTS = {
         checklist=["Collect", "Organize", "Analyze", "Interpret", "Present"],
         screen="stats",
     ),
+    "git": dict(
+        title="Git",
+        title_font="Damion",   # Norican's G reads like a small g
+        title_fs=400,
+        quote=("Small commits", "lead to big progress."),
+        books=["Version Control", "Branches", "Merge", "Pull Requests"],
+        checklist=["Stage", "Commit", "Push", "Pull", "Merge"],
+        screen="git",
+    ),
 }
 
 
@@ -364,6 +373,16 @@ def screen_content(kind):
         for i, wdt in enumerate((140, 118, 132, 86)):
             g.append(f'<rect x="258" y="{92+i*42}" width="{wdt}" height="15" rx="7.5" '
                      f'fill="{"#cbbcf4" if i % 2 == 0 else "#f6bfd3"}"/>')
+    elif kind == "git":
+        g.append('<path d="M120,200 C152,200 150,112 186,112 L264,112 C300,112 298,200 330,200" fill="none" '
+                 'stroke="#ec7ea6" stroke-width="9" stroke-linecap="round"/>'
+                 '<path d="M48,200 L382,200" stroke="#8a6fdb" stroke-width="9" stroke-linecap="round"/>')
+        for cx, cy, col in ((60, 200, "#cdbcf5"), (120, 200, "#cdbcf5"), (226, 200, "#cdbcf5"),
+                            (186, 112, "#f6bad0"), (264, 112, "#f6bad0"), (330, 200, GOLD), (380, 200, "#cdbcf5")):
+            g.append(f'<circle cx="{cx}" cy="{cy}" r="16" fill="{col}" stroke="{INK}" stroke-width="3.5"/>')
+        g.append(f'<text x="44" y="262" class="hand" font-size="38" fill="#6f52c6">main</text>'
+                 f'<text x="180" y="78" class="hand" font-size="34" fill="#d2557f">feature</text>'
+                 f'<text x="300" y="262" class="hand" font-size="34" fill="{INK}">merge</text>')
     elif kind == "stats":
         cols = ("#cdbcf5", "#f6bad0", "#b9c6f5", "#a98fe6", "#b9c6f5", "#f6bad0", "#cdbcf5")
         x0, bw = 62, 44
@@ -619,7 +638,7 @@ def label_svg(sub, style="title"):
         parts.append(title_block(sub["title"]))
         parts.append(quote_block(sub["quote"]))
     else:   # subject name only: big title across the top, quote + bow take the old info-box space
-        parts.append(title_block(sub["title"], x=1060, y=470, fs=340, maxw=1130))
+        parts.append(title_block(sub["title"], x=1060, y=470, fs=sub.get("title_fs", 340), maxw=1130))
         parts.append(quote_block(sub["quote"], cx=1545, y=910, gap=88, fs=76, maxw=700, div_gap=72, div_half=235))
         parts.append(bow(1545, 720, 1.1))
     parts.append(laptop(sub["screen"]))
@@ -693,7 +712,7 @@ async def render(names, title_font, style="title"):
         page = await ctx.new_page()
         for name in names:
             html = OUT / f"{name}.html"
-            html.write_text(PAGE.format(fonts=FONTS.as_uri(), title_font=title_font, svg=label_svg(SUBJECTS[name], style)), encoding="utf-8")
+            html.write_text(PAGE.format(fonts=FONTS.as_uri(), title_font=SUBJECTS[name].get("title_font", title_font), svg=label_svg(SUBJECTS[name], style)), encoding="utf-8")
             await page.goto(html.as_uri())
             await page.wait_for_function("document.body.dataset.ready === '1'", timeout=60000)
             png = OUT / f"label-{name}.png"
