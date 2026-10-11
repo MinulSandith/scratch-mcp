@@ -1,7 +1,9 @@
 # Subject labels (half A4)
 
 Pastel notebook labels for **Economics, Accounting, English and Statistics**, each exactly half an A4 sheet
-(210 x 148.5 mm), with blank lines for Name, Class, Section, Subject Teacher, School and Session.
+(210 x 148.5 mm). The current design shows only the subject name (no write-in fields); the earlier version with
+Name / Class / Section / Subject Teacher / School / Session lines is kept in `output/with-fields/`
+(rebuild it with `--style fields`).
 
 * `output/subject-labels-A4.pdf` - print this: 2 A4 pages, two labels per page, dashed cut line in the middle.
   Print at **100% / Actual size** (not "Fit to page").

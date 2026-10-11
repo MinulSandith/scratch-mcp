@@ -284,7 +284,7 @@ def washi_tape(cx, cy, ang):
             f'<path d="{d}" fill="none" stroke="#e595b2" stroke-width="2" stroke-opacity=".6"/></g>')
 
 
-def title_block(title):
+def title_block(title, x=1262, y=488, fs=270, maxw=890):
     rays_l = ('<g id="rays-left" fill="none" stroke="#a88ee8" stroke-width="16" stroke-linecap="round" '
               'filter="url(#paint)"><path d="M-20,-38 L-80,-64"/><path d="M-28,6 L-106,10"/>'
               '<path d="M-20,50 L-74,86"/></g>')
@@ -296,18 +296,18 @@ def title_block(title):
               f'<path d="M30,42 L98,50"/></g>{extra.svg()}</g>')
     t = esc(title)
     return (f'{rays_l}{rays_r}'
-            f'<text id="title-shadow" x="1262" y="488" text-anchor="middle" class="title" font-size="270" '
-            f'fill="#bba8f0" transform="translate(12,10)">{t}</text>'
-            f'<text id="title" x="1262" y="488" text-anchor="middle" class="title" font-size="270" '
-            f'fill="#1e1931" data-maxw="890">{t}</text>')
+            f'<text id="title-shadow" x="{x}" y="{y}" text-anchor="middle" class="title" font-size="{fs}" '
+            f'fill="#bba8f0" transform="translate({f(fs*.044)},{f(fs*.037)})">{t}</text>'
+            f'<text id="title" x="{x}" y="{y}" text-anchor="middle" class="title" font-size="{fs}" '
+            f'fill="#1e1931" data-maxw="{maxw}">{t}</text>')
 
 
-def quote_block(lines):
+def quote_block(lines, cx=580, y=218, gap=66, fs=54, maxw=470, div_gap=61, div_half=165):
     a, b = (esc(s) for s in lines)
-    return (f'<text x="580" y="218" text-anchor="middle" class="hand" font-size="54" fill="{TEXT}" '
-            f'data-maxw="470" data-fit="quote">“{a}</text>'
-            f'<text x="580" y="284" text-anchor="middle" class="hand" font-size="54" fill="{TEXT}" '
-            f'data-maxw="470" data-fit="quote">{b}”</text>' + divider(580, 345, 165))
+    return (f'<text x="{cx}" y="{y}" text-anchor="middle" class="hand" font-size="{fs}" fill="{TEXT}" '
+            f'data-maxw="{maxw}" data-fit="quote">“{a}</text>'
+            f'<text x="{cx}" y="{y+gap}" text-anchor="middle" class="hand" font-size="{fs}" fill="{TEXT}" '
+            f'data-maxw="{maxw}" data-fit="quote">{b}”</text>' + divider(cx, y + gap + div_gap, div_half))
 
 
 LID = (1.0, -0.097, 0.114, 1.0, 165.0, 560.0)   # laptop lid: local 460 x 340 -> page
@@ -543,18 +543,28 @@ def info_box():
     return "".join(out)
 
 
-def decorations():
+def decorations(style):
     lay = Layer()
-    for x, y, s, r in ((330, 430, 30, 0), (262, 520, 20, 0), (128, 640, 17, 0), (842, 238, 22, 0),
-                       (1188, 205, 20, 0), (1642, 262, 27, 0),
-                       (1940, 520, 19, 0), (1880, 578, 15, 0), (842, 640, 19, 0), (1080, 1180, 22, 0),
-                       (1990, 1180, 17, 0), (565, 470, 16, 0), (1260, 1360, 16, 0), (690, 1360, 15, 0)):
-        sparkle(lay, x, y, s, r)
-    for x, y, s, c, r in ((372, 520, 50, "p", -10), (128, 760, 44, "p", 8), (965, 662, 44, "k", 10),
-                          (1065, 750, 56, "p", -6), (1058, 1282, 44, "p", 6),
-                          (1600, 1352, 32, "k", -8), (520, 420, 30, "k", 10)):
+    if style == "fields":
+        sparkles = ((330, 430, 30), (262, 520, 20), (128, 640, 17), (842, 238, 22), (1188, 205, 20), (1642, 262, 27),
+                    (1940, 520, 19), (1880, 578, 15), (842, 640, 19), (1080, 1180, 22), (1990, 1180, 17),
+                    (565, 470, 16), (1260, 1360, 16), (690, 1360, 15))
+        hearts = ((372, 520, 50, "p", -10), (128, 760, 44, "p", 8), (965, 662, 44, "k", 10), (1065, 750, 56, "p", -6),
+                  (1058, 1282, 44, "p", 6), (1600, 1352, 32, "k", -8), (520, 420, 30, "k", 10))
+        dots = ((600, 390), (238, 560), (1150, 1300), (1330, 1350), (1470, 545), (1990, 940), (905, 860))
+    else:
+        sparkles = ((300, 600, 26), (128, 640, 17), (700, 158, 20), (1430, 152, 18), (842, 640, 19),
+                    (1940, 520, 19), (1300, 690, 24), (1945, 790, 17), (1210, 1110, 20), (1080, 1180, 22),
+                    (1990, 1180, 17), (1260, 1360, 16), (690, 1360, 15))
+        hearts = ((128, 760, 44, "p", 8), (965, 662, 44, "k", 10), (1065, 750, 56, "p", -6), (1058, 1282, 44, "p", 6),
+                  (1600, 1352, 32, "k", -8), (1790, 700, 46, "p", 10), (1700, 1150, 38, "k", -8),
+                  (1380, 1170, 30, "p", 6))
+        dots = ((238, 560), (1150, 1300), (1330, 1350), (1990, 940), (905, 860), (1500, 1110), (1250, 820))
+    for x, y, s in sparkles:
+        sparkle(lay, x, y, s)
+    for x, y, s, c, r in hearts:
         heart(lay, x, y, s, "#b7a0ea" if c == "p" else PINK, "#6f58b0" if c == "p" else PINK_D, r)
-    for x, y in ((600, 390), (238, 560), (1150, 1300), (1330, 1350), (1470, 545), (1990, 940), (905, 860)):
+    for x, y in dots:
         lay.top.append(f'<circle cx="{x}" cy="{y}" r="4" fill="{INK}" fill-opacity=".7"/>')
     return lay.svg()
 
@@ -588,7 +598,7 @@ DEFS = f"""
 </defs>"""
 
 
-def label_svg(sub):
+def label_svg(sub, style="title"):
     parts = [f'<rect width="{W}" height="{H}" fill="{PAPER}"/>', border()]
     # corner and side sprigs (behind everything else)
     parts.append(sprig(((112, 268), (175, 182), (268, 140), (392, 152)),
@@ -604,16 +614,22 @@ def label_svg(sub):
                         (0.5, "leaf", 1, 44), (0.58, "pink", -1, 46), (0.72, "purple", 1, 44),
                         (0.84, "leaf", -1, 40), (1.0, "pink", 0, 40)]))
     parts.append(washi_tape(1905, 214, 31))
-    parts.append(decorations())
-    parts.append(title_block(sub["title"]))
-    parts.append(quote_block(sub["quote"]))
+    parts.append(decorations(style))
+    if style == "fields":
+        parts.append(title_block(sub["title"]))
+        parts.append(quote_block(sub["quote"]))
+    else:   # subject name only: big title across the top, quote + bow take the old info-box space
+        parts.append(title_block(sub["title"], x=1060, y=470, fs=340, maxw=1130))
+        parts.append(quote_block(sub["quote"], cx=1545, y=910, gap=88, fs=76, maxw=700, div_gap=72, div_half=235))
+        parts.append(bow(1545, 720, 1.1))
     parts.append(laptop(sub["screen"]))
     parts.append(mug(708, 694))
     parts.append(books(sub["books"]))
     parts.append(notebook(sub["checklist"]))
     parts.append(pen(918, 1322, -50.6))
-    parts.append(info_box())
-    parts.append(bow(1537, 620, 0.95))
+    if style == "fields":
+        parts.append(info_box())
+        parts.append(bow(1537, 620, 0.95))
     parts.append(sprig(((1872, 1296), (1772, 1336), (1650, 1316), (1500, 1338)),
                        [(0.15, "leaf", 1, 42), (0.3, "purple", -1, 42), (0.45, "pink", 1, 42),
                         (0.6, "leaf", -1, 38), (0.72, "purple", 1, 40), (0.88, "leaf", -1, 36), (1.0, "pink", 0, 36)]))
@@ -667,7 +683,7 @@ layout();
 </script></body></html>"""
 
 
-async def render(names, title_font):
+async def render(names, title_font, style="title"):
     from playwright.async_api import async_playwright
     OUT.mkdir(exist_ok=True)
     pages = []
@@ -677,7 +693,7 @@ async def render(names, title_font):
         page = await ctx.new_page()
         for name in names:
             html = OUT / f"{name}.html"
-            html.write_text(PAGE.format(fonts=FONTS.as_uri(), title_font=title_font, svg=label_svg(SUBJECTS[name])), encoding="utf-8")
+            html.write_text(PAGE.format(fonts=FONTS.as_uri(), title_font=title_font, svg=label_svg(SUBJECTS[name], style)), encoding="utf-8")
             await page.goto(html.as_uri())
             await page.wait_for_function("document.body.dataset.ready === '1'", timeout=60000)
             png = OUT / f"label-{name}.png"
@@ -728,6 +744,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="*", choices=list(SUBJECTS))
     ap.add_argument("--title-font", default="Norican")
+    ap.add_argument("--style", choices=["title", "fields"], default="title",
+                    help="title = subject name only (default); fields = with Name/Class/... write-in box")
     ap.add_argument("--no-pdf", action="store_true")
     ap.add_argument("--pdf-only", action="store_true", help="rebuild the PDF from existing PNGs")
     args = ap.parse_args()
@@ -735,7 +753,7 @@ def main():
     if args.pdf_only:
         pngs = [OUT / f"label-{n}.png" for n in names]
     else:
-        pngs = asyncio.run(render(names, args.title_font))
+        pngs = asyncio.run(render(names, args.title_font, args.style))
     if not args.no_pdf and len(names) == len(SUBJECTS):
         make_pdf(pngs, OUT / "subject-labels-A4.pdf")
 
