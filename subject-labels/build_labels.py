@@ -14,8 +14,8 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-FONTS = ROOT / "fonts"
-OUT = ROOT / "output"
+FONTS = Path(os.environ.get("LABEL_FONTS", ROOT / "fonts")).resolve()
+OUT = Path(os.environ.get("LABEL_OUT", ROOT / "output")).resolve()
 
 W, H = 2100, 1485          # 210 x 148.5 mm
 PX_W = 2480                # 300 dpi
@@ -625,9 +625,9 @@ def label_svg(sub):
 
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face {{ font-family: "LabelTitle"; src: url("../fonts/{title_font}.ttf"); }}
-@font-face {{ font-family: "LabelHand"; src: url("../fonts/PatrickHand.ttf"); }}
-@font-face {{ font-family: "LabelSerif"; src: url("../fonts/DMSerifDisplay.ttf"); }}
+@font-face {{ font-family: "LabelTitle"; src: url("{fonts}/{title_font}.ttf"); }}
+@font-face {{ font-family: "LabelHand"; src: url("{fonts}/PatrickHand.ttf"); }}
+@font-face {{ font-family: "LabelSerif"; src: url("{fonts}/DMSerifDisplay.ttf"); }}
 html, body {{ margin: 0; padding: 0; background: #fff; }}
 svg {{ display: block; }}
 .title {{ font-family: "LabelTitle"; }}
@@ -677,7 +677,7 @@ async def render(names, title_font):
         page = await ctx.new_page()
         for name in names:
             html = OUT / f"{name}.html"
-            html.write_text(PAGE.format(title_font=title_font, svg=label_svg(SUBJECTS[name])), encoding="utf-8")
+            html.write_text(PAGE.format(fonts=FONTS.as_uri(), title_font=title_font, svg=label_svg(SUBJECTS[name])), encoding="utf-8")
             await page.goto(html.as_uri())
             await page.wait_for_function("document.body.dataset.ready === '1'", timeout=60000)
             png = OUT / f"label-{name}.png"
